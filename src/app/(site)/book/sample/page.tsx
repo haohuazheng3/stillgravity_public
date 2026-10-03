@@ -35,8 +35,8 @@ export default function SamplePage() {
             { name: "Free chapters", path: "/book/sample" },
           ]}
         />
-        <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
-          <div>
+        <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-10">
+          <div className="min-w-0">
             <p className="eyebrow eyebrow-accent">Part 1 · The deep game · free to read</p>
             <h1 className="display mt-4 text-[2.6rem] text-ink sm:text-[3.8rem]">The truths nobody told you</h1>
             <p className="mt-5 max-w-2xl text-[1.12rem] leading-relaxed text-ink-3">
