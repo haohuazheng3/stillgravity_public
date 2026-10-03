@@ -23,10 +23,9 @@ export const clerkAppearance = {
     fontSize: "16px",
   },
   elements: {
-    rootBox: "w-full",
-    cardBox: "w-full !shadow-none !border-0 !bg-transparent",
-    card: "!bg-transparent !shadow-none !border-0 !p-0",
-    header: "hidden",
+    rootBox: "!w-full !min-w-0",
+    cardBox: "!w-full !max-w-full !min-w-0 !shadow-none !border-0 !bg-transparent",
+    card: "!w-full !min-w-0 !bg-transparent !shadow-none !border-0 !p-0",
     footer: "!bg-transparent !bg-none [&_*]:!bg-transparent",
     footerAction: "hidden",
     formFieldInput: "!min-h-[50px] !text-[16px]",

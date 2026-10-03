@@ -29,7 +29,7 @@ export default async function SignInPage(props: PageProps<"/sign-in/[[...sign-in
   return (
     <div className="px-3 pt-10 sm:px-5 sm:pt-16">
       <div className="mx-auto grid max-w-[1000px] items-center gap-8 lg:grid-cols-[1fr_440px] lg:gap-14">
-        <div className="order-2 lg:order-1">
+        <div className="order-2 min-w-0 lg:order-1">
           <p className="eyebrow eyebrow-accent">{buying ? "One step before checkout" : "Your library"}</p>
           <h1 className="display mt-4 text-[2.3rem] text-ink sm:text-[3.2rem]">
             {buying ? "Where should we keep your copy?" : "Email in. Code in. You’re in."}
@@ -48,8 +48,8 @@ export default async function SignInPage(props: PageProps<"/sign-in/[[...sign-in
             <Link href="/privacy" className="underline underline-offset-4">privacy policy</Link>.
           </p>
         </div>
-        <div className="order-1 lg:order-2">
-          <div className="slab-ink p-6 sm:p-8">
+        <div className="order-1 min-w-0 lg:order-2">
+          <div className="slab-ink p-5 sm:p-8">
             <p className="mb-5 font-sans text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#f0b752]">
               Sign in or create your library
             </p>
