@@ -143,7 +143,7 @@ export function Chat({ kind, label, lines }: { kind: "Text" | "In person" | "App
 export function Points({ title, items }: { title: string; items: { lead?: string; text: string }[] }) {
   return (
     <div className="my-6">
-      <h3 className="font-sans text-[1.02rem] font-bold text-ink">{title}</h3>
+      <h3 className="font-sans text-[1.02rem] font-semibold text-ink">{title}</h3>
       <ul className="mt-3 space-y-2.5">
         {items.map((it) => (
           <li key={it.text} className="flex gap-3">

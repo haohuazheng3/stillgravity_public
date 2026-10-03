@@ -8,24 +8,35 @@ import { isIndexable } from "@/lib/env";
 
 const barlow = Barlow({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
   variable: "--font-barlow",
   display: "swap",
 });
 
 const barlowCondensed = Barlow_Condensed({
   subsets: ["latin"],
-  weight: ["700", "800"],
+  weight: ["700"],
   variable: "--font-barlow-condensed",
   display: "swap",
+  preload: false, // numerals below the fold only
 });
 
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
-  style: ["normal", "italic"],
+  style: ["normal"],
   axes: ["opsz"],
   variable: "--font-source-serif",
   display: "swap",
+});
+
+// Italic is loaded as its own face and not preloaded: it decorates, it never carries the first paint.
+const sourceSerifItalic = Source_Serif_4({
+  subsets: ["latin"],
+  style: ["italic"],
+  axes: ["opsz"],
+  variable: "--font-source-serif-italic",
+  display: "swap",
+  preload: false,
 });
 
 const indexable = isIndexable();
@@ -75,7 +86,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${barlow.variable} ${barlowCondensed.variable} ${sourceSerif.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${barlow.variable} ${barlowCondensed.variable} ${sourceSerif.variable} ${sourceSerifItalic.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

@@ -16,7 +16,7 @@ export function ChatHook({ className = "" }: { className?: string }) {
         <span>11:42 PM</span>
       </div>
 
-      <div className="mt-6 flex flex-col gap-2.5 font-sans" aria-label="A text conversation">
+      <div className="mt-6 flex flex-col gap-2.5 font-sans" role="log" aria-label="A text conversation">
         <p className="bubble bubble-out bubble-enter self-end" style={{ animationDelay: "0.2s" }}>
           had a really good time tonight
         </p>
@@ -30,10 +30,11 @@ export function ChatHook({ className = "" }: { className?: string }) {
           Read 11:42 PM
         </p>
         <div className="bubble-enter self-start" style={{ animationDelay: "3.4s" }}>
-          <span className="bubble bubble-in inline-flex items-center gap-1.5 !px-4 !py-3.5" aria-label="She is typing">
-            <span className="typing-dot" />
-            <span className="typing-dot" />
-            <span className="typing-dot" />
+          <span className="bubble bubble-in inline-flex items-center gap-1.5 !px-4 !py-3.5">
+            <span className="sr-only">She is typing</span>
+            <span className="typing-dot" aria-hidden="true" />
+            <span className="typing-dot" aria-hidden="true" />
+            <span className="typing-dot" aria-hidden="true" />
           </span>
         </div>
       </div>

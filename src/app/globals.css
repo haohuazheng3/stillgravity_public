@@ -21,8 +21,8 @@
   --line-2: rgba(160, 174, 200, 0.18);
   --ink: #edf0f6;
   --ink-2: #b2bbcb;
-  --ink-3: #7c879b;
-  --ink-4: #4a5468;
+  --ink-3: #9aa4b6;
+  --ink-4: #7f8aa0;
   --accent: #e9a93b;
   --accent-2: #f5c76a;
   --accent-ink: #1b1306;
@@ -58,8 +58,8 @@
     --line-2: rgba(15, 23, 42, 0.14);
     --ink: #0d1322;
     --ink-2: #3a4458;
-    --ink-3: #667085;
-    --ink-4: #9aa2b2;
+    --ink-3: #4e586b;
+    --ink-4: #5e687c;
     --accent: #e5a23a;
     --accent-2: #f0b752;
     --accent-ink: #1b1306;
@@ -90,8 +90,8 @@
   --line-2: rgba(15, 23, 42, 0.14);
   --ink: #0d1322;
   --ink-2: #3a4458;
-  --ink-3: #667085;
-  --ink-4: #9aa2b2;
+  --ink-3: #4e586b;
+  --ink-4: #5e687c;
   --accent: #e5a23a;
   --accent-2: #f0b752;
   --accent-ink: #1b1306;
@@ -136,6 +136,7 @@
   --color-bad-soft: var(--bad-soft);
   --font-sans: var(--font-barlow), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: var(--font-source-serif), ui-serif, Georgia, "Times New Roman", serif;
+  --font-serif-italic: var(--font-source-serif-italic), var(--font-source-serif), ui-serif, Georgia, serif;
   --font-condensed: var(--font-barlow-condensed), var(--font-barlow), ui-sans-serif, sans-serif;
   --radius-slab: 28px;
   --radius-inner: 20px;
@@ -305,6 +306,7 @@ body {
     text-wrap: balance;
   }
   .display em {
+    font-family: var(--font-serif-italic);
     font-style: italic;
     font-weight: 500;
     color: var(--accent-text);
@@ -336,7 +338,7 @@ body {
     color: var(--accent-text);
   }
   .dek {
-    font-family: var(--font-serif);
+    font-family: var(--font-serif-italic);
     font-style: italic;
     color: var(--ink-2);
     font-variation-settings: "opsz" 24;
@@ -616,7 +618,7 @@ body {
   }
   .prose-sg h3 {
     font-family: var(--font-sans);
-    font-weight: 700;
+    font-weight: 600;
     font-size: 1.12rem;
     line-height: 1.35;
     color: var(--ink);
@@ -652,9 +654,14 @@ body {
   .prose-sg li::marker {
     color: var(--accent-text);
   }
+  .prose-sg em,
+  .prose-sg i {
+    font-family: var(--font-serif-italic);
+  }
   .prose-sg blockquote {
     border-left: 2px solid var(--accent);
     padding-left: 1.1em;
+    font-family: var(--font-serif-italic);
     font-style: italic;
     color: var(--ink);
   }
@@ -704,7 +711,7 @@ body {
     line-height: 1.25;
   }
   .prose-ui h3 {
-    font-weight: 700;
+    font-weight: 600;
     color: var(--ink);
     margin-top: 1.5em;
   }
