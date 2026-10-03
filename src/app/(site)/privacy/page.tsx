@@ -20,7 +20,7 @@ export default function PrivacyPage() {
     >
       <h2>Who we are</h2>
       <p>
-        Still Gravity (“we”, “us”) publishes {BOOK.title} and the guides on {SITE.domain}. For anything in this policy, write to{" "}
+        Still Gravity (“we”, “us”) publishes {BOOK.displayTitle} and the guides on {SITE.domain}. For anything in this policy, write to{" "}
         <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
       </p>
 

@@ -130,7 +130,7 @@ export default async function SuccessPage(props: PageProps<"/checkout/success">)
             <p className="tag tag-ok">Unlocked · order {orderRef(grant.orderId)}</p>
             <h1 className="display mt-4 text-[2.3rem] text-ink sm:text-[2.8rem]">You’re in.</h1>
             <p className="mt-3 text-[1.02rem] leading-relaxed text-ink-3">
-              {BOOK.title} is in your library for good. Start with the Situation Finder on page 10, or read Part 1 tonight.
+              {BOOK.displayTitle} is in your library for good. Start with the Situation Finder on page 10, or read Part 1 tonight.
             </p>
             <div className="mt-6">
               <LibraryActions />

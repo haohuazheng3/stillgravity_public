@@ -25,7 +25,7 @@ function BookCTA({ chapter }: { chapter?: string }) {
       </div>
       <div className="font-sans">
         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#f0b752]">
-          {ch ? `Chapter ${ch.id} of ${BOOK.title}` : BOOK.title}
+          {ch ? `Chapter ${ch.id} of ${BOOK.displayTitle}` : BOOK.displayTitle}
         </p>
         <p className="mt-2 text-[1.05rem] font-semibold text-[#edf0f6]">
           {ch ? ch.title : "The full playbook: 83 one-page chapters"}
@@ -188,7 +188,7 @@ export async function ArticleView({ post, preview = false }: { post: Post; previ
                 </nav>
               ) : null}
               <div className="slab p-5">
-                <p className="text-[0.95rem] font-semibold text-ink">{BOOK.title}</p>
+                <p className="text-[0.95rem] font-semibold text-ink">{BOOK.displayTitle}</p>
                 <p className="mt-1 text-[0.86rem] text-ink-3">83 chapters for the moments that keep men up at night.</p>
                 <BuyButton size="md" className="btn-block mt-4" />
                 <Link href="/book/sample" className="btn btn-quiet btn-sm btn-block mt-2">

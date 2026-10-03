@@ -9,7 +9,7 @@ export interface Faq {
 export const FAQS: Faq[] = [
   {
     q: "What exactly do I get?",
-    a: `The full first edition of ${BOOK.title} as a ${BOOK.pages}-page PDF: ${BOOK.chapters} one-page chapters in twelve parts, the Situation Finder that maps 36 real situations to the right chapter, and the toolkit (a 30-day reset, a texting cheat sheet, a first-date checklist, a glossary and a further-reading list). Read it in your browser or download it.`,
+    a: `The full first edition of ${BOOK.displayTitle} as a ${BOOK.pages}-page PDF: ${BOOK.chapters} one-page chapters in twelve parts, the Situation Finder that maps 36 real situations to the right chapter, and the toolkit (a 30-day reset, a texting cheat sheet, a first-date checklist, a glossary and a further-reading list). Read it in your browser or download it.`,
     tags: ["book", "buying"],
   },
   {

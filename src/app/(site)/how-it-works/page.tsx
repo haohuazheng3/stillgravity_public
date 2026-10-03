@@ -38,7 +38,7 @@ export default function HowItWorksPage() {
         data={{
           "@context": "https://schema.org",
           "@type": "HowTo",
-          name: `How to get ${BOOK.title}`,
+          name: `How to get ${BOOK.displayTitle}`,
           step: STEPS.map((s, i) => ({ "@type": "HowToStep", position: i + 1, name: s.title, text: s.body })),
         }}
       />

@@ -20,6 +20,8 @@ export const SITE = {
 export const BOOK = {
   title: "What She Won't Tell You",
   shortTitle: "What She Won’t Tell You",
+  /** Typographic title for headings and visible copy (curly apostrophe). */
+  displayTitle: "What She Won’t Tell You",
   subtitle: "The complete playbook for attraction, dating, and becoming the man she chooses",
   edition: "First edition, 2026",
   price: 9.99,

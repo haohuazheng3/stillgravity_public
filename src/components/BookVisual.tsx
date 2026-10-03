@@ -1,6 +1,9 @@
 import Image from "next/image";
 import { BOOK } from "@/lib/site";
 
+/** 16×24 preview of the cover, so the slot never looks empty while the real image loads. */
+const COVER_BLUR = "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAADwAwCdASoQABgAPu1iqU2ppaQiMAgBMB2JZwAAXHcsM4vap+ylcckAAP7uiHmI1aTwCWqW8w3EfLIUWkfJZbr6koT05DQsaGMc8ocX5QqlNtm0Brt9JYjter7+oHlbePFZFlMM6wblqPqMSTEGkzB8S644AAAA";
+
 /** The real first-edition cover, floating in the void with a soft spine and shadow. */
 export function BookVisual({ priority = false, className = "", sizes = "(max-width: 768px) 70vw, 380px" }: { priority?: boolean; className?: string; sizes?: string }) {
   return (
@@ -13,11 +16,13 @@ export function BookVisual({ priority = false, className = "", sizes = "(max-wid
         <div className="relative overflow-hidden rounded-[10px] shadow-[0_50px_90px_-30px_rgba(3,6,14,0.85),0_18px_36px_-18px_rgba(3,6,14,0.7)] ring-1 ring-white/10">
           <Image
             src="/book/cover.webp"
-            alt={`${BOOK.title}: ${BOOK.subtitle}. Book cover.`}
+            alt={`${BOOK.displayTitle}: ${BOOK.subtitle}. Book cover.`}
             width={1200}
             height={1800}
             priority={priority}
             sizes={sizes}
+            placeholder="blur"
+            blurDataURL={COVER_BLUR}
             className="block h-auto w-full"
           />
           {/* spine highlight */}
@@ -46,7 +51,7 @@ export function LookInside() {
               <div className="overflow-hidden rounded-[14px] bg-white ring-1 ring-black/5">
                 <Image
                   src={`/book/page-${p.n}.webp`}
-                  alt={`Page ${p.n} of ${BOOK.title}: ${p.title}`}
+                  alt={`Page ${p.n} of ${BOOK.displayTitle}: ${p.title}`}
                   width={900}
                   height={1350}
                   sizes="280px"

@@ -115,7 +115,7 @@ export function TrustLine({ className = "" }: { className?: string }) {
 export function CtaSlab({ title, body }: { title?: ReactNode; body?: ReactNode }) {
   return (
     <div className="slab-ink overflow-hidden px-6 py-12 text-center sm:px-12 sm:py-16">
-      <p className="font-sans text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#f0b752]">{BOOK.title}</p>
+      <p className="font-sans text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#f0b752]">{BOOK.displayTitle}</p>
       <h2 className="display mx-auto mt-4 max-w-2xl text-[2.1rem] text-[#f3f5f9] sm:text-[3rem]">
         {title ?? (
           <>

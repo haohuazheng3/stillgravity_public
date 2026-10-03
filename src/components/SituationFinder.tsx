@@ -59,7 +59,7 @@ export function SituationFinder({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1.15fr_1fr] lg:gap-6">
-      <div className="slab p-4 sm:p-6">
+      <div className="slab min-w-0 p-4 sm:p-6">
         <div role="tablist" aria-label="Situation groups" className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
           {SITUATION_GROUPS.map((g) => (
             <button
@@ -93,7 +93,7 @@ export function SituationFinder({
         </ul>
       </div>
 
-      <div ref={answerRef} className="slab-ink scroll-mt-28 p-6 sm:p-8" aria-live="polite">
+      <div ref={answerRef} className="slab-ink min-w-0 scroll-mt-28 p-6 sm:p-8" aria-live="polite">
         <p className="font-sans text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#f0b752]">If you’re thinking</p>
         <p key={selected.slug} className="animate-rise mt-3 font-serif text-[1.55rem] leading-tight text-[#f3f5f9] sm:text-[1.8rem]" style={{ fontVariationSettings: '"opsz" 40' }}>
           {selected.quote}

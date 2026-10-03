@@ -11,7 +11,7 @@ import { BOOK } from "@/lib/site";
 import { bookLd, breadcrumbLd, faqLd, pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: `${BOOK.title}: the dating playbook nobody gave you`,
+  title: `${BOOK.displayTitle}: the dating playbook nobody gave you`,
   description: `${BOOK.chapters} one-page chapters on approaching, texting, reading her signals, dates, the talking stage, rejection and relationships, plus the deeper skills that make scripts unnecessary. PDF, ${BOOK.priceLabel}.`,
   path: "/book",
 });
@@ -54,7 +54,7 @@ export default function BookPage() {
           <BookVisual priority className="mx-auto w-[64%] max-w-[360px] lg:order-none lg:w-full" sizes="(max-width: 1024px) 64vw, 400px" />
           <div>
             <p className="eyebrow eyebrow-accent">The dating playbook nobody gave you</p>
-            <h1 className="display mt-4 text-[2.7rem] text-ink sm:text-[4rem]">{BOOK.title}</h1>
+            <h1 className="display mt-4 text-[2.7rem] text-ink sm:text-[4rem]">{BOOK.displayTitle}</h1>
             <p className="dek mt-4 text-[1.25rem]">{BOOK.subtitle}</p>
             <ul className="mt-6 grid gap-2.5">
               {COVER_PROMISES.map((p) => (

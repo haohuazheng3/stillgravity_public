@@ -87,9 +87,10 @@ export default function HomePage() {
           title="Eight truths nobody told you"
           lede="Tactics built on wrong beliefs collapse the first time she doesn’t follow the script. Everything else in the book stands on these."
         />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* phones: one swipeable row of floating cards; larger screens: a grid */}
+        <div className="-mx-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-3 pb-4 [scrollbar-width:none] sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
           {TRUTHS.map((t) => (
-            <Link key={t.id} href={`/book/sample#chapter-${t.id}`} className="slab slab-hover flex flex-col p-6">
+            <Link key={t.id} href={`/book/sample#chapter-${t.id}`} className="slab slab-hover flex w-[78%] shrink-0 snap-start flex-col p-6 sm:w-auto">
               <span className="text-[0.8rem] font-semibold text-accent-text">Chapter {t.id}</span>
               <span className="headline mt-3 text-[1.25rem] text-ink">{t.title}</span>
               <span className="mt-auto pt-6 text-[0.92rem] leading-relaxed text-ink-3">{t.truth}</span>
@@ -130,7 +131,7 @@ export default function HomePage() {
             <BookVisual className="mx-auto w-[66%] max-w-[320px] lg:w-full" />
             <div>
               <p className="eyebrow eyebrow-accent">The book · {BOOK.edition}</p>
-              <h2 className="display mt-4 text-[2.3rem] text-ink sm:text-[3rem]">{BOOK.title}</h2>
+              <h2 className="display mt-4 text-[2.3rem] text-ink sm:text-[3rem]">{BOOK.displayTitle}</h2>
               <p className="dek mt-3 text-[1.2rem]">{BOOK.subtitle}</p>
               <ul className="mt-6 grid gap-2.5">
                 {COVER_PROMISES.map((p) => (

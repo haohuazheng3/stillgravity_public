@@ -22,7 +22,7 @@ export default function SamplePage() {
           "@context": "https://schema.org",
           "@type": "Chapter",
           name: "Part 1: The truths nobody told you",
-          isPartOf: { "@type": "Book", name: BOOK.title, "@id": "https://stillgravity.com/book#book" },
+          isPartOf: { "@type": "Book", name: BOOK.displayTitle, "@id": "https://stillgravity.com/book#book" },
           url: "https://stillgravity.com/book/sample",
         }}
       />
@@ -41,7 +41,7 @@ export default function SamplePage() {
             <h1 className="display mt-4 text-[2.6rem] text-ink sm:text-[3.8rem]">The truths nobody told you</h1>
             <p className="mt-5 max-w-2xl text-[1.12rem] leading-relaxed text-ink-3">
               Most dating advice fails because it starts with tactics. Tactics built on wrong beliefs collapse the first time she
-              doesn’t follow the script. These eight truths come first because everything else in {BOOK.title} is built on them.
+              doesn’t follow the script. These eight truths come first because everything else in {BOOK.displayTitle} is built on them.
             </p>
             <div className="mt-10">
               <SampleChapters />

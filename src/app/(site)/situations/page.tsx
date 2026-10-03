@@ -29,7 +29,7 @@ export default function SituationsPage() {
           <p className="eyebrow eyebrow-accent">The Situation Finder</p>
           <h1 className="display mt-4 text-[2.6rem] text-ink sm:text-[3.8rem]">Find the thought that’s keeping you up.</h1>
           <p className="mt-5 text-[1.12rem] leading-relaxed text-ink-3">
-            Thirty-six real situations, each with an honest first move and the chapter of {BOOK.title} that handles it in full:
+            Thirty-six real situations, each with an honest first move and the chapter of {BOOK.displayTitle} that handles it in full:
             the scripts, the science, and the mistakes to avoid.
           </p>
         </div>

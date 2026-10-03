@@ -19,7 +19,7 @@ export default function RefundPolicyPage() {
     >
       <h2>The promise</h2>
       <p>
-        If {BOOK.title} doesn’t help you, you can have a full refund within {BOOK.refundDays} days of your purchase. You don’t
+        If {BOOK.displayTitle} doesn’t help you, you can have a full refund within {BOOK.refundDays} days of your purchase. You don’t
         need to explain why, though we always appreciate knowing what we could do better.
       </p>
 

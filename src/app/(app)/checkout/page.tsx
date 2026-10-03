@@ -28,7 +28,7 @@ export default async function CheckoutPage() {
               <BookVisual sizes="96px" />
             </div>
             <div className="flex-1">
-              <p className="text-[1.1rem] font-semibold text-ink">{BOOK.title}</p>
+              <p className="text-[1.1rem] font-semibold text-ink">{BOOK.displayTitle}</p>
               <p className="text-[0.9rem] text-ink-3">
                 PDF ebook · {BOOK.pages} pages · {BOOK.chapters} chapters
               </p>

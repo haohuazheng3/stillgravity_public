@@ -25,7 +25,7 @@ export default function TermsPage() {
 
       <h2>3. What you’re buying</h2>
       <p>
-        {BOOK.title} is a digital book delivered as a PDF. When you buy it you receive a personal, non-exclusive,
+        {BOOK.displayTitle} is a digital book delivered as a PDF. When you buy it you receive a personal, non-exclusive,
         non-transferable license to read it and keep copies for your own use on your own devices, including updates to this
         edition that we publish. You may not resell, share, upload, sublicense or redistribute the book or any substantial part
         of it, or remove the personalization line printed on its pages.

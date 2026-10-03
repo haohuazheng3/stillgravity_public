@@ -13,7 +13,7 @@ export function GET() {
     "",
     `> ${SITE.description}`,
     "",
-    `${SITE.name} publishes ${BOOK.title}, a ${BOOK.pages}-page field manual in ${BOOK.parts} parts (${BOOK.chapters} one-page chapters), and free guides. Principles: respect is the baseline, consent is the floor, influence never manipulation. Research is summarized honestly, including when findings are debated.`,
+    `${SITE.name} publishes ${BOOK.displayTitle}, a ${BOOK.pages}-page field manual in ${BOOK.parts} parts (${BOOK.chapters} one-page chapters), and free guides. Principles: respect is the baseline, consent is the floor, influence never manipulation. Research is summarized honestly, including when findings are debated.`,
     "",
     "## Key pages",
     `- [The book](${SITE.url}/book): ${BOOK.subtitle}. ${BOOK.priceLabel}, one-time, PDF.`,

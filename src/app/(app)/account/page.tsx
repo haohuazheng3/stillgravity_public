@@ -67,7 +67,7 @@ export default async function AccountPage(props: PageProps<"/account">) {
             <BookVisual className="mx-auto w-[52%] max-w-[220px] md:w-full" sizes="220px" />
             <div>
               <p className="tag tag-ok">Owned · {BOOK.edition}</p>
-              <h2 className="headline mt-4 text-[1.9rem] text-ink">{BOOK.title}</h2>
+              <h2 className="headline mt-4 text-[1.9rem] text-ink">{BOOK.displayTitle}</h2>
               <p className="dek mt-2 text-[1.05rem]">{BOOK.subtitle}</p>
               <div className="mt-6">
                 <LibraryActions prepared={Boolean(copy[0])} />
@@ -84,7 +84,7 @@ export default async function AccountPage(props: PageProps<"/account">) {
           <div className="grid items-center gap-8 md:grid-cols-[200px_1fr] md:gap-12">
             <BookVisual className="mx-auto w-[48%] max-w-[200px] md:w-full" sizes="200px" />
             <div>
-              <h2 className="headline text-[1.7rem] text-ink">{BOOK.title} isn’t in your library yet.</h2>
+              <h2 className="headline text-[1.7rem] text-ink">{BOOK.displayTitle} isn’t in your library yet.</h2>
               <p className="mt-3 max-w-xl text-[1rem] leading-relaxed text-ink-3">
                 {BOOK.chapters} one-page chapters for the moments that keep men up at night, {BOOK.priceLabel} once. It appears
                 here the second checkout completes.
@@ -118,7 +118,7 @@ export default async function AccountPage(props: PageProps<"/account">) {
               <li key={o.id} className="flex flex-col gap-1 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-[0.98rem] font-semibold text-ink">
-                    {BOOK.title} · {orderRef(o.id)}
+                    {BOOK.displayTitle} · {orderRef(o.id)}
                   </p>
                   <p className="text-[0.85rem] text-ink-3">
                     {new Date(o.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })} ·{" "}
