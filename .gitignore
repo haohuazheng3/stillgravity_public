@@ -1,0 +1,33 @@
+# dependencies
+/node_modules
+infra/workers/node_modules
+/.pnp
+.pnp.*
+
+# builds & caches
+/.next/
+/out/
+/build
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+infra/workers/.wrangler
+/public-out
+/public-repo
+
+# secrets: never committed (production values live in Vercel; local in .env.local)
+.env*
+!.env.example
+*.pem
+
+# runtime locks and temp files
+.flow/ops.lock
+.runner.lock
+.stamp-*
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
