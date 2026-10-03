@@ -61,7 +61,7 @@ export function ogCard({ eyebrow, title, subtitle, withCover = false }: { eyebro
         >
           <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", fontSize: 24, letterSpacing: 4, textTransform: "uppercase", color: "#f0b752" }}>{eyebrow}</div>
-            <div style={{ display: "flex", marginTop: 26, fontFamily: "Serif", fontSize: title.length > 60 ? 54 : 64, lineHeight: 1.08, color: "#f3f5f9", letterSpacing: -1 }}>
+            <div style={{ display: "flex", marginTop: 26, fontFamily: "Serif", fontWeight: 600, fontStyle: "normal", fontSize: title.length > 60 ? 54 : 64, lineHeight: 1.08, color: "#f3f5f9", letterSpacing: -1 }}>
               {title}
             </div>
             {subtitle ? (
@@ -69,7 +69,7 @@ export function ogCard({ eyebrow, title, subtitle, withCover = false }: { eyebro
             ) : null}
             <div style={{ display: "flex", marginTop: "auto", alignItems: "center", gap: 14 }}>
               <Mark size={44} />
-              <div style={{ display: "flex", fontFamily: "Serif", fontSize: 30, color: "#edf0f6" }}>Still Gravity</div>
+              <div style={{ display: "flex", fontFamily: "Serif", fontWeight: 600, fontStyle: "normal", fontSize: 30, color: "#edf0f6" }}>Still Gravity</div>
               <div style={{ display: "flex", marginLeft: 14, fontSize: 22, color: "#7c879b" }}>stillgravity.com</div>
             </div>
           </div>

@@ -18,6 +18,9 @@ export function pageMetadata(input: {
   absoluteTitle?: boolean;
 }): Metadata {
   const url = absoluteUrl(input.path);
+  // A page-level openGraph object replaces the inherited one, so every page names its image;
+  // the root /opengraph-image is the default (segment-level opengraph-image files still win).
+  const image = input.image ?? "/opengraph-image";
   return {
     title: input.absoluteTitle ? { absolute: input.title } : input.title,
     description: input.description,
@@ -29,13 +32,13 @@ export function pageMetadata(input: {
       siteName: SITE.name,
       type: input.type === "article" ? "article" : "website",
       locale: SITE.locale,
-      ...(input.image ? { images: [{ url: absoluteUrl(input.image), width: 1200, height: 630 }] } : {}),
+      images: [{ url: absoluteUrl(image), width: 1200, height: 630, alt: input.title }],
     },
     twitter: {
       card: "summary_large_image",
       title: input.title,
       description: input.description,
-      ...(input.image ? { images: [absoluteUrl(input.image)] } : {}),
+      images: [absoluteUrl(image)],
     },
     ...(input.noindex ? { robots: { index: false, follow: false } } : {}),
   };
