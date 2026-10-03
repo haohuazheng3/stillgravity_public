@@ -10,6 +10,7 @@ export const metadata: Metadata = pageMetadata({
   title: "Pricing",
   description: `Part 1, the Situation Finder and every guide are free. The full book is ${BOOK.priceLabel}, once: no subscription, instant PDF, ${BOOK.refundDays}-day refund.`,
   path: "/pricing",
+  image: "/og/book",
 });
 
 export default function PricingPage() {

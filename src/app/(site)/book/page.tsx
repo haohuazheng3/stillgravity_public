@@ -14,6 +14,7 @@ export const metadata: Metadata = pageMetadata({
   title: `${BOOK.displayTitle}: the dating playbook nobody gave you`,
   description: `${BOOK.chapters} one-page chapters on approaching, texting, reading her signals, dates, the talking stage, rejection and relationships, plus the deeper skills that make scripts unnecessary. PDF, ${BOOK.priceLabel}.`,
   path: "/book",
+  image: "/og/book",
 });
 
 const FOR = [

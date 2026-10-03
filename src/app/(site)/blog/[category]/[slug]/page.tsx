@@ -21,7 +21,7 @@ export async function generateMetadata(props: PageProps<"/blog/[category]/[slug]
     description: post.description,
     path: postUrl(post),
     type: "article",
-    ...(post.image ? { image: post.image.src } : {}),
+    image: post.image?.src ?? `/og/post/${post.category}/${post.slug}`,
   });
   return {
     ...meta,

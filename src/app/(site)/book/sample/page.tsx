@@ -12,6 +12,7 @@ export const metadata: Metadata = pageMetadata({
   description:
     "Eight one-page chapters on how attraction actually works: why kindness with a hidden invoice fails, clear intent with a loose grip, neediness, effort over words, rejection as a filter, and presence over lines.",
   path: "/book/sample",
+  image: "/og/book",
 });
 
 export default function SamplePage() {
