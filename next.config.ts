@@ -46,6 +46,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  // Most visitors arrive once from search: ship the (small, atomic) CSS inside the HTML
+  // instead of a render-blocking stylesheet request.
+  experimental: { inlineCss: true },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
