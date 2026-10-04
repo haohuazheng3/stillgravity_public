@@ -73,10 +73,12 @@ export const CHECKOUT_BRAND = {
   /** Shown by the pay button, so buyers know where the book goes before they pay. */
   deliveryNote: "Your PDF is emailed to the address above as soon as you pay, and it’s ready to download on the next page.",
   /**
-   * Optional suffix after the account prefix on card statements (max 22 chars in total).
-   * Unset on Still Gravity's own Stripe account: the statement shows the account's descriptor.
+   * Our name on card statements, after the account's fixed prefix: "<PREFIX>* STILL GRAV".
+   * Stripe allows 22 characters in total. The account has no shortened descriptor, so its
+   * descriptor cut to 10 characters is the prefix, which leaves 10 here. Give the account a
+   * shorter prefix in the Dashboard before lengthening this.
    */
-  statementSuffix: () => env("STRIPE_DESCRIPTOR_SUFFIX"),
+  statementSuffix: "STILL GRAV",
   /**
    * Optional line under the pay button. Only needed on a Stripe account shared with other
    * brands, to say who operates the site before the buyer pays.

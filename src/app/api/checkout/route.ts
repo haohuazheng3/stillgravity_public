@@ -30,7 +30,6 @@ export async function POST(req: Request) {
     const origin = IS_PRODUCTION_DEPLOY ? SITE.url : new URL(req.url).origin;
     const metadata = { product: PRODUCT_ID, site: CHECKOUT_BRAND.site, env: stripeEnvTag() };
     const note = CHECKOUT_BRAND.operatorNote();
-    const suffix = CHECKOUT_BRAND.statementSuffix();
 
     const session = await stripe().checkout.sessions.create(
       {
@@ -41,7 +40,7 @@ export async function POST(req: Request) {
         payment_intent_data: {
           metadata,
           description: `${BOOK.title} (ebook)`,
-          ...(suffix ? { statement_descriptor_suffix: suffix } : {}),
+          statement_descriptor_suffix: CHECKOUT_BRAND.statementSuffix,
         },
         allow_promotion_codes: true,
         success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,

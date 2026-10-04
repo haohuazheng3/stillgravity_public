@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { missingEnv } from "@/lib/env";
-import { stripeMode } from "@/lib/stripe";
+import { CHECKOUT_BRAND, stripeMode } from "@/lib/stripe";
 
 // Fake keys are assembled at runtime so the repository never contains key-shaped literals.
 const key = (...parts: string[]) => parts.join("_");
@@ -29,5 +29,20 @@ describe("Stripe keys", () => {
     expect(missingEnv()).toContain("STRIPE_CONTEXT");
     vi.stubEnv("STRIPE_CONTEXT", "acct_123");
     expect(missingEnv()).not.toContain("STRIPE_CONTEXT");
+  });
+});
+
+describe("Checkout brand", () => {
+  it("fits the card statement: 10-character prefix + '* ' + suffix ≤ 22, Latin, no reserved characters", () => {
+    const suffix = CHECKOUT_BRAND.statementSuffix;
+    expect(10 + 2 + suffix.length).toBeLessThanOrEqual(22);
+    expect(suffix).toMatch(/^[\x20-\x7E]+$/);
+    expect(suffix).toMatch(/[A-Za-z]/);
+    expect(suffix).not.toMatch(/[<>\\'"*]/);
+  });
+
+  it("shows the brand name as text, not a logo", () => {
+    expect(CHECKOUT_BRAND.displayName).toBe("Still Gravity");
+    expect(CHECKOUT_BRAND).not.toHaveProperty("logoUrl");
   });
 });

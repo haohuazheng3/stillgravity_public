@@ -59,7 +59,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: "What will my card statement show?",
-    a: "A short, discreet merchant descriptor that includes our name. The book’s title never appears on your statement.",
+    a: "A short, discreet descriptor, never the book’s title. Card and wallet payments show it ending in STILL GRAV: our name, shortened to fit the 22 characters a card statement allows.",
     tags: ["buying"],
   },
   {
