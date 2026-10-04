@@ -97,10 +97,23 @@ export function BuyButton({ className = "", label, size = "lg" }: { className?: 
   );
 }
 
+/** The delivery promise, shown wherever someone is about to pay. */
+export function DeliveryNote({ className = "" }: { className?: string }) {
+  return (
+    <p className={`flex items-start gap-2 text-[0.85rem] leading-relaxed text-ink-3 ${className}`}>
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden className="mt-[3px] shrink-0 text-accent-text">
+        <rect x="1.75" y="3.25" width="12.5" height="9.5" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M2.5 4.5 8 8.75l5.5-4.25" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <span>No account needed. After payment, your PDF is emailed to the address you enter at checkout, and it’s ready to download on the next page.</span>
+    </p>
+  );
+}
+
 export function TrustLine({ className = "" }: { className?: string }) {
   return (
     <ul className={`flex flex-wrap gap-x-5 gap-y-2 text-[0.86rem] text-ink-3 ${className}`}>
-      {["Instant PDF download", `${BOOK.refundDays}-day refund`, "Secure checkout by Stripe", "Discreet billing"].map((t) => (
+      {["Instant download + PDF by email", `${BOOK.refundDays}-day refund`, "Secure checkout by Stripe", "Discreet billing"].map((t) => (
         <li key={t} className="flex items-center gap-1.5">
           <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden className="text-ok">
             <path d="M2.5 7.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />

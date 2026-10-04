@@ -13,9 +13,9 @@ import {
 
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 
-/** Mirror of a Clerk user, created lazily the first time they touch a server feature. */
+/** A buyer, keyed by a hash of their checkout email (guest checkout: no accounts). */
 export const users = pgTable("users", {
-  id: text("id").primaryKey(), // Clerk user id
+  id: text("id").primaryKey(), // `b_` + sha256(normalised email), see src/lib/buyers.ts
   email: text("email").notNull(),
   stripeCustomerId: text("stripe_customer_id"),
   createdAt: createdAt(),
@@ -41,6 +41,12 @@ export const orders = pgTable(
     createdAt: createdAt(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     refundedAt: timestamp("refunded_at", { withTimezone: true }),
+    // Delivery email (the PDF goes to the checkout email). Claimed before sending so the
+    // success page, the webhook and the reconcile job never send it twice.
+    emailSentAt: timestamp("email_sent_at", { withTimezone: true }),
+    emailClaimedAt: timestamp("email_claimed_at", { withTimezone: true }),
+    emailAttempts: integer("email_attempts").notNull().default(0),
+    emailError: text("email_error"),
   },
   (t) => [
     uniqueIndex("orders_session_uq").on(t.stripeSessionId),

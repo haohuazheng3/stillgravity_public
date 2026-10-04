@@ -7,7 +7,7 @@ import { BOOK } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
   title: "How it works",
-  description: `Read free, create your library with just your email, pay ${BOOK.priceLabel} once through Stripe, and read instantly in your browser or as a PDF on any device.`,
+  description: `Read free, pay ${BOOK.priceLabel} once through Stripe with just your email, then download the PDF instantly. It’s also emailed to you. No account needed.`,
   path: "/how-it-works",
 });
 
@@ -18,16 +18,17 @@ const STEPS = [
     cta: { href: "/book/sample", label: "Read Part 1" },
   },
   {
-    title: "Open your library with just your email",
-    body: "Type your email, then the six-digit code we send. No password to create or forget. New or returning, it’s the same three steps.",
+    title: `Pay ${BOOK.priceLabel}, once, with just your email`,
+    body: "Secure checkout by Stripe: cards, Apple Pay and Google Pay where available. No account and no password; the email you enter there is where your book goes. Your statement shows a discreet descriptor, never the title.",
   },
   {
-    title: `Pay ${BOOK.priceLabel}, once`,
-    body: "Secure checkout by Stripe: cards, Apple Pay and Google Pay where available. No subscription. Your statement shows a discreet descriptor, never the title.",
+    title: "Download it instantly",
+    body: "The page you land on after paying has the download, and the PDF is emailed to you at the same moment. It opens on any phone, tablet, e-reader or laptop.",
   },
   {
-    title: "Read it instantly",
-    body: "You land back in your library with the book unlocked. Read it in the browser or download the PDF; it’s there on every device you sign in on.",
+    title: "Need it again later?",
+    body: "Enter your checkout email at stillgravity.com/download and we send your copy again with a fresh link. No login, ever.",
+    cta: { href: "/download", label: "Get my copy again" },
   },
 ];
 

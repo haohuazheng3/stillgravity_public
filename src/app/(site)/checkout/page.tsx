@@ -1,21 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
 import { CheckoutStarter } from "@/components/CheckoutStarter";
 import { BookVisual } from "@/components/BookVisual";
-import { Container } from "@/components/ui";
-import { hasBook } from "@/lib/entitlements";
+import { Container, DeliveryNote } from "@/components/ui";
 import { paymentsEnabled } from "@/lib/stripe";
 import { BOOK } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Checkout", robots: { index: false, follow: false } };
 
-export default async function CheckoutPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in?redirect_url=%2Fcheckout");
-  if (await hasBook(userId)) redirect("/account?owned=1");
+/** No account needed: this page only hands over to Stripe, where the buyer enters their email. */
+export default function CheckoutPage() {
   const payments = paymentsEnabled();
 
   return (
@@ -27,7 +22,7 @@ export default async function CheckoutPage() {
             <div className="w-20 shrink-0 sm:w-24">
               <BookVisual sizes="96px" />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <p className="text-[1.1rem] font-semibold text-ink">{BOOK.displayTitle}</p>
               <p className="text-[0.9rem] text-ink-3">
                 PDF ebook · {BOOK.pages} pages · {BOOK.chapters} chapters
@@ -47,7 +42,8 @@ export default async function CheckoutPage() {
               </Link>
             </div>
           )}
-          <p className="mt-6 text-[0.85rem] leading-relaxed text-ink-4">
+          <DeliveryNote className="mt-6" />
+          <p className="mt-3 text-[0.85rem] leading-relaxed text-ink-4">
             Payment happens on Stripe’s secure page; we never see your card. Have a promo code? Enter it there. Your statement
             shows a discreet descriptor, never the title. {BOOK.refundDays}-day refund.
           </p>

@@ -12,6 +12,8 @@ export const SITE = {
   description:
     "Honest, research-backed guidance for men on attraction, texting, dating and relationships, and the deeper work of becoming a man worth choosing.",
   email: "contact@stillgravity.com",
+  /** Sender of the book delivery email (Resend); replies go to `email`. */
+  deliveryEmail: "books@stillgravity.com",
   replyTime: "We reply to every message within two business days.",
   foundingYear: 2026,
   locale: "en_US",
@@ -42,6 +44,6 @@ export const BOOK = {
 export const PRODUCT_ID = BOOK.sku;
 
 /** Pages that must never be indexed or listed in the sitemap. */
-export const PRIVATE_PATHS = ["/account", "/checkout", "/admin", "/sign-in", "/api/"] as const;
+export const PRIVATE_PATHS = ["/checkout", "/download", "/admin", "/sign-in", "/api/"] as const;
 
 export const CONTENT_UPDATED = "2026-10-03";

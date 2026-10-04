@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { BookVisual, LookInside } from "@/components/BookVisual";
-import { BuyButton, Container, CtaSlab, FaqList, PartsAccordion, Section, SectionHead, ThreeRules, TrustLine } from "@/components/ui";
+import { BuyButton, Container, CtaSlab, DeliveryNote, FaqList, PartsAccordion, Section, SectionHead, ThreeRules, TrustLine } from "@/components/ui";
 import { JsonLd } from "@/components/JsonLd";
 import { CheckoutNotice } from "@/components/CheckoutNotice";
 import { BACK_COVER, COVER_PROMISES, TOOLKIT, TOOLS } from "@/content/book";
@@ -79,6 +79,7 @@ export default function BookPage() {
               </div>
               <BuyButton className="btn-block mt-5" label="Get the book now" />
               <TrustLine className="mt-4 justify-center" />
+              <DeliveryNote className="mt-4" />
             </div>
           </div>
         </div>

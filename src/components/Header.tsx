@@ -54,10 +54,10 @@ export function Header() {
         </nav>
         <div className="flex items-center gap-1.5">
           <Link
-            href="/account"
+            href="/download"
             className="hidden rounded-full px-3.5 py-2 text-[0.95rem] font-medium text-ink-3 transition-colors hover:text-ink sm:inline-flex"
           >
-            Library
+            My copy
           </Link>
           <Link href="/checkout" prefetch={false} className="btn btn-primary btn-sm">
             Get the book
@@ -95,7 +95,7 @@ export function Header() {
             </button>
           </div>
           <nav aria-label="Mobile" className="flex flex-col">
-            {[{ href: "/", label: "Home" }, ...NAV, { href: "/account", label: "Your library" }, { href: "/faq", label: "FAQ" }].map((n) => (
+            {[{ href: "/", label: "Home" }, ...NAV, { href: "/download", label: "Get my copy again" }, { href: "/faq", label: "FAQ" }].map((n) => (
               <Link
                 key={n.href}
                 href={n.href}

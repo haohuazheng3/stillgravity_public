@@ -5,6 +5,7 @@ import { db } from "./db";
 import { entitlements, orders } from "./db/schema";
 import { stripe, stripeEnvTag } from "./stripe";
 import { grantFromCheckoutSession, revokeByPaymentIntent } from "./entitlements";
+import { deliverPending } from "./delivery";
 import { PRODUCT_ID } from "./site";
 
 export interface ReconcileReport {
@@ -14,6 +15,8 @@ export interface ReconcileReport {
   repaired: { sessionId: string; userId: string; orderId: string }[];
   failed: { sessionId: string; reason: string }[];
   refundsApplied: string[];
+  /** Delivery emails that hadn't gone out yet: sent now, or still failing. */
+  delivery: { sent: string[]; failed: string[] };
   ranAt: string;
 }
 
@@ -25,7 +28,16 @@ export interface ReconcileReport {
 export async function reconcile(days = 7): Promise<ReconcileReport> {
   const s = stripe();
   const since = Math.floor(Date.now() / 1000) - days * 86400;
-  const report: ReconcileReport = { scannedSessions: 0, ours: 0, alreadyGranted: 0, repaired: [], failed: [], refundsApplied: [], ranAt: new Date().toISOString() };
+  const report: ReconcileReport = {
+    scannedSessions: 0,
+    ours: 0,
+    alreadyGranted: 0,
+    repaired: [],
+    failed: [],
+    refundsApplied: [],
+    delivery: { sent: [], failed: [] },
+    ranAt: new Date().toISOString(),
+  };
 
   for await (const session of s.checkout.sessions.list({ created: { gte: since }, status: "complete", limit: 100 })) {
     report.scannedSessions++;
@@ -68,5 +80,8 @@ export async function reconcile(days = 7): Promise<ReconcileReport> {
       .limit(1);
     if (!ent[0] || ent[0].status !== "active") report.failed.push({ sessionId: o.stripeSessionId, reason: "paid-order-without-active-entitlement" });
   }
+
+  // Every paid order gets its delivery email, even if the success page and the webhook both missed it.
+  report.delivery = await deliverPending();
   return report;
 }

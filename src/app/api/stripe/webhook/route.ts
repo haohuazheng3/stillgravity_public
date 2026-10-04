@@ -1,20 +1,23 @@
 import type Stripe from "stripe";
+import { after } from "next/server";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { stripeEvents } from "@/lib/db/schema";
 import { stripe } from "@/lib/stripe";
 import { grantFromCheckoutSession, reinstateByPaymentIntent, revokeByPaymentIntent } from "@/lib/entitlements";
+import { deliverOrder } from "@/lib/delivery";
 import { captureError } from "@/lib/errors";
 import { notifyOwner } from "@/lib/notify";
 import { requireEnv } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 /*
- * Fallback unlock path + refunds/disputes. Verified signature, idempotent on event.id.
- * The Stripe account is shared with other brands, so events that aren't ours are
- * acknowledged (200) and marked "ignored".
+ * Fallback grant + delivery path, refunds and disputes. Verified signature, idempotent on
+ * event.id. Events for another site or product (metadata.site / product) are acknowledged
+ * (200) and marked "ignored".
  */
 
 async function handle(event: Stripe.Event): Promise<"processed" | "ignored"> {
@@ -30,6 +33,10 @@ async function handle(event: Stripe.Event): Promise<"processed" | "ignored"> {
         if (r.reason.startsWith("payment-")) return "ignored"; // async methods: wait for async_payment_succeeded
         throw new Error(`grant failed for ${obj.id}: ${r.reason}`);
       }
+      // The delivery email runs after the 200, so Stripe never waits on PDF stamping; it's idempotent.
+      after(async () => {
+        await deliverOrder(r.orderId).catch((err) => captureError(err, { route: "/api/stripe/webhook", context: { stage: "deliver", orderId: r.orderId } }));
+      });
       return "processed";
     }
     case "checkout.session.async_payment_failed": {

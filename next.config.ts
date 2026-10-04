@@ -71,9 +71,10 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      { source: "/sign-up", destination: "/sign-in", permanent: true },
-      { source: "/login", destination: "/sign-in", permanent: true },
-      { source: "/library", destination: "/account", permanent: true },
+      { source: "/sign-up", destination: "/book", permanent: false },
+      { source: "/login", destination: "/download", permanent: false },
+      { source: "/library", destination: "/download", permanent: false },
+      { source: "/account/:path*", destination: "/download", permanent: false },
       { source: "/sample", destination: "/book/sample", permanent: true },
     ];
   },

@@ -35,8 +35,8 @@ export default function RefundPolicyPage() {
 
       <h2>What happens to your copy</h2>
       <p>
-        When a refund is issued, the book is removed from your library and download links stop working. Please delete the copies
-        you downloaded.
+        When a refund is issued, your download links stop working and we stop sending the book to your email. Please delete the
+        copies you downloaded.
       </p>
 
       <h2>After {BOOK.refundDays} days</h2>

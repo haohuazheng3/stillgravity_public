@@ -12,15 +12,16 @@ export const metadata: Metadata = pageMetadata({
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of service" path="/terms" updated="2026-10-03" intro={`By using ${SITE.domain} or buying the book you agree to these terms. They’re written to be read.`}>
+    <LegalPage title="Terms of service" path="/terms" updated="2026-10-04" intro={`By using ${SITE.domain} or buying the book you agree to these terms. They’re written to be read.`}>
       <h2>1. Who can use the site</h2>
-      <p>You must be at least 18 years old to create an account or buy the book.</p>
+      <p>You must be at least 18 years old to buy the book.</p>
 
-      <h2>2. Your account</h2>
+      <h2>2. Delivery and your email</h2>
       <p>
-        You sign in with your email address and a one-time code. Keep access to that inbox: anyone who can read it can sign in
-        to your library. Tell us at <a href={`mailto:${SITE.email}`}>{SITE.email}</a> if you think your account has been used
-        without your permission.
+        There are no accounts. Your purchase is tied to the email you enter at checkout: the PDF is sent there, the page you land
+        on after paying lets you download it right away, and anyone who can read that inbox can ask us to send the book to it
+        again. Use an address you control, and tell us at <a href={`mailto:${SITE.email}`}>{SITE.email}</a> if you think someone
+        else got hold of your copy.
       </p>
 
       <h2>3. What you’re buying</h2>
@@ -77,8 +78,8 @@ export default function TermsPage() {
 
       <h2>10. Ending access</h2>
       <p>
-        You can stop using the site at any time and ask us to delete your account. We may suspend accounts that break these
-        terms, for example by distributing the book.
+        You can stop using the site at any time and ask us to delete the data we hold about you. We may disable download links
+        and refuse further sales to anyone who breaks these terms, for example by distributing the book.
       </p>
 
       <h2>11. Governing law</h2>

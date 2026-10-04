@@ -2,12 +2,13 @@ import { clerkClient, clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
 /*
- * Runs only on personal pages and APIs (see `config.matcher`): marketing and blog pages
- * never pass through here, so they're served straight from the CDN cache.
+ * Buyers never sign in (guest checkout, the PDF goes to their email). Sign-in exists only
+ * for the owner's admin area, so this runs only on /admin, /sign-in and APIs (see
+ * `config.matcher`); every other page is served straight from the CDN cache.
  */
 
-const isProtected = createRouteMatcher(["/account(.*)", "/checkout(.*)", "/admin(.*)", "/api/library(.*)", "/api/admin(.*)"]);
-const isAdmin = createRouteMatcher(["/admin(.*)", "/api/admin(.*)"]);
+const isProtected = createRouteMatcher(["/admin(.*)", "/api/admin(.*)"]);
+const isAdmin = isProtected;
 
 const adminCache = new Map<string, { ok: boolean; at: number }>();
 
@@ -37,10 +38,7 @@ const withClerk = clerkMiddleware(async (auth, req) => {
     const { userId } = await auth();
     if (!userId) {
       if (req.nextUrl.pathname.startsWith("/api/")) return NextResponse.json({ error: "sign_in_required" }, { status: 401 });
-      if (isAdmin(req)) return NextResponse.rewrite(new URL("/__not-found", req.url)); // don't reveal the admin area exists
-      const signIn = new URL("/sign-in", req.url);
-      signIn.searchParams.set("redirect_url", `${req.nextUrl.pathname}${req.nextUrl.search}`);
-      return NextResponse.redirect(signIn);
+      return NextResponse.rewrite(new URL("/__not-found", req.url)); // don't reveal the admin area exists
     }
     if (isAdmin(req) && !(await isAdminUser(userId))) {
       if (req.nextUrl.pathname.startsWith("/api/")) return NextResponse.json({ error: "not found" }, { status: 404 });
@@ -57,13 +55,13 @@ const withClerk = clerkMiddleware(async (auth, req) => {
 });
 
 /**
- * Degraded mode: until CLERK_SECRET_KEY is configured, public routes keep working (health,
- * webhooks, contact…) and personal pages answer a clear 503 instead of crashing everything.
+ * Degraded mode: without CLERK_SECRET_KEY everything public keeps working (checkout,
+ * downloads, health, webhooks, contact…) and only the admin area answers a clear 503.
  */
 export default function proxy(req: NextRequest, ev: NextFetchEvent) {
   if (!process.env.CLERK_SECRET_KEY) {
     if (isProtected(req)) {
-      return new NextResponse("Accounts are being set up. Please try again in a few minutes.", {
+      return new NextResponse("The admin area is being set up. Please try again in a few minutes.", {
         status: 503,
         headers: { "Content-Type": "text/plain; charset=utf-8", "Retry-After": "300" },
       });
@@ -74,5 +72,5 @@ export default function proxy(req: NextRequest, ev: NextFetchEvent) {
 }
 
 export const config = {
-  matcher: ["/account/:path*", "/checkout/:path*", "/admin/:path*", "/sign-in/:path*", "/api/:path*"],
+  matcher: ["/admin/:path*", "/sign-in/:path*", "/api/:path*"],
 };

@@ -2,10 +2,20 @@
 
 import { useEffect } from "react";
 import { ANALYTICS_LOADED_EVENT } from "./Consent";
+import { CHECKOUT_NONCE, CHECKOUT_STASH } from "./CheckoutStarter";
 
-/** Fires FlowGlance purchase + unlock once per Checkout Session (deduped across reloads). */
+/**
+ * Fires FlowGlance purchase + unlock once per Checkout Session (deduped across reloads)
+ * and forgets the finished checkout attempt, so a later purchase starts a fresh session.
+ */
 export function PurchaseEvents({ sessionId, orderId, amount, currency }: { sessionId: string; orderId: string; amount: number; currency: string }) {
   useEffect(() => {
+    try {
+      sessionStorage.removeItem(CHECKOUT_STASH);
+      sessionStorage.removeItem(CHECKOUT_NONCE);
+    } catch {
+      /* fine */
+    }
     const key = `sg_purchase_${sessionId}`;
     try {
       if (localStorage.getItem(key)) return;

@@ -5,12 +5,11 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title: "Cookie policy",
-  description: "The cookies and local storage stillgravity.com uses: essential sign-in and checkout cookies, your consent choice, theme preference, and FlowGlance analytics.",
+  description: "The cookies and local storage stillgravity.com uses: essential checkout cookies, your consent choice, theme preference, and FlowGlance analytics. No sign-in cookies for buyers.",
   path: "/cookie-policy",
 });
 
 const ROWS = [
-  ["__session, __client_uat and related Clerk cookies", "Essential", "Keep you signed in to your library securely (set by Clerk on stillgravity.com and clerk.stillgravity.com).", "Session to 1 year"],
   ["sg_consent", "Essential", "Remembers your analytics choice so we don’t ask again.", "180 days"],
   ["sg-theme (local storage)", "Preference", "Remembers if you chose the light or dark theme. Never sent to us.", "Until cleared"],
   ["Stripe cookies", "Essential", "Set by Stripe on checkout.stripe.com to process payments and prevent fraud.", "Set by Stripe"],
@@ -22,8 +21,8 @@ export default function CookiePolicyPage() {
     <LegalPage
       title="Cookie policy"
       path="/cookie-policy"
-      updated="2026-10-03"
-      intro="We keep this short: a few essential cookies so sign-in and checkout work, one preference, and our only analytics tool."
+      updated="2026-10-04"
+      intro="We keep this short: there are no accounts and no sign-in cookies for buyers. A few essential cookies so checkout works, one preference, and our only analytics tool."
     >
       <h2>What we use</h2>
       <div className="overflow-x-auto">
@@ -61,8 +60,8 @@ export default function CookiePolicyPage() {
 
       <h2>Blocking cookies</h2>
       <p>
-        You can block or delete cookies in your browser settings. If you block essential cookies, signing in and checkout won’t
-        work.
+        You can block or delete cookies in your browser settings. If you block essential cookies, checkout may not work. (Our
+        own admin area uses Clerk sign-in cookies; buyers never receive them.)
       </p>
     </LegalPage>
   );

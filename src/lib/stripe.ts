@@ -70,6 +70,8 @@ export const CHECKOUT_BRAND = {
   buttonColor: "#E9A93B",
   /** Square brand mark next to the name at the top of Checkout (Stripe fetches it from our own domain). */
   iconUrl: `${SITE.url}/brand/logo-512.png`,
+  /** Shown by the pay button, so buyers know where the book goes before they pay. */
+  deliveryNote: "Your PDF is emailed to the address above as soon as you pay, and it’s ready to download on the next page.",
   /**
    * Optional suffix after the account prefix on card statements (max 22 chars in total).
    * Unset on Still Gravity's own Stripe account: the statement shows the account's descriptor.

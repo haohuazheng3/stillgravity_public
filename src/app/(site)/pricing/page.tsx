@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Breadcrumbs, BuyButton, Container, FaqList, Section, SectionHead, TrustLine } from "@/components/ui";
+import { Breadcrumbs, BuyButton, Container, DeliveryNote, FaqList, Section, SectionHead, TrustLine } from "@/components/ui";
 import { JsonLd } from "@/components/JsonLd";
 import { faqsFor } from "@/content/faq";
 import { bookLd, faqLd, pageMetadata } from "@/lib/seo";
@@ -55,8 +55,9 @@ export default function PricingPage() {
             <ul className="mt-6 space-y-2.5 text-[0.98rem] text-[#c9d1de]">
               <li>· All {BOOK.chapters} chapters, {BOOK.pages}-page PDF</li>
               <li>· The toolkit: 30-day reset, texting cheat sheet, first-date checklist</li>
-              <li>· Read in the browser or download, any device</li>
-              <li>· Free updates to this edition</li>
+              <li>· Emailed to you as a PDF, and ready to download right after you pay</li>
+              <li>· No account to create: just your email at checkout</li>
+              <li>· Free updates to this edition, sent to the same email</li>
               <li>· {BOOK.refundDays}-day refund, no questions</li>
             </ul>
             <div className="mt-auto pt-8">
@@ -65,6 +66,7 @@ export default function PricingPage() {
           </div>
         </div>
         <TrustLine className="mt-6 justify-center" />
+        <DeliveryNote className="mx-auto mt-4 max-w-xl justify-center" />
       </Section>
 
       <Section>

@@ -6,39 +6,37 @@ import { entitlements, orders } from "./db/schema";
 import { newId } from "./ids";
 import { PRODUCT_ID } from "./site";
 import { CHECKOUT_BRAND, stripeEnvTag } from "./stripe";
+import { ensureBuyer, normalizeEmail } from "./buyers";
 
 /*
- * The ONLY place that decides who owns the book. The success page (primary path),
- * the webhook (fallback) and the reconcile job all call grantFromCheckoutSession,
- * which is idempotent on the Checkout Session id.
+ * The ONLY place that decides who owns the book. Checkout is a guest checkout: the buyer
+ * is the email entered on Stripe's page. The success page (primary path), the webhook
+ * (fallback) and the reconcile job all call grantFromCheckoutSession, which is
+ * idempotent on the Checkout Session id.
  */
 
 export type OrderRow = typeof orders.$inferSelect;
 export type EntitlementRow = typeof entitlements.$inferSelect;
 
-export async function activeEntitlement(userId: string): Promise<EntitlementRow | null> {
+export async function activeEntitlement(buyerId: string): Promise<EntitlementRow | null> {
   const rows = await db
     .select()
     .from(entitlements)
-    .where(and(eq(entitlements.userId, userId), eq(entitlements.product, PRODUCT_ID), eq(entitlements.status, "active")))
+    .where(and(eq(entitlements.userId, buyerId), eq(entitlements.product, PRODUCT_ID), eq(entitlements.status, "active")))
     .limit(1);
   return rows[0] ?? null;
 }
 
-export async function hasBook(userId: string): Promise<boolean> {
-  return (await activeEntitlement(userId)) !== null;
-}
-
-export async function ordersForUser(userId: string): Promise<OrderRow[]> {
-  return db.select().from(orders).where(eq(orders.userId, userId)).orderBy(desc(orders.createdAt)).limit(20);
+export async function ordersForBuyer(buyerId: string): Promise<OrderRow[]> {
+  return db.select().from(orders).where(eq(orders.userId, buyerId)).orderBy(desc(orders.createdAt)).limit(20);
 }
 
 export type GrantResult =
-  | { ok: true; userId: string; orderId: string; newlyGranted: boolean; amountTotal: number; currency: string }
+  | { ok: true; userId: string; email: string; orderId: string; newlyGranted: boolean; amountTotal: number; currency: string }
   | { ok: false; reason: string };
 
-function sessionUserId(s: Stripe.Checkout.Session): string | null {
-  return s.client_reference_id || (s.metadata?.userId ?? null);
+function sessionEmail(s: Stripe.Checkout.Session): string | null {
+  return s.customer_details?.email ?? s.customer_email ?? null;
 }
 
 /** Pure validation, exported for tests: is this session a completed purchase of the book on this site? */
@@ -51,7 +49,7 @@ export function validateSession(s: Stripe.Checkout.Session, envTag: string): { o
   if (s.payment_status !== "paid" && s.payment_status !== "no_payment_required") {
     return { ok: false, reason: `payment-${s.payment_status}` };
   }
-  if (!sessionUserId(s)) return { ok: false, reason: "no-user" };
+  if (!sessionEmail(s)) return { ok: false, reason: "no-email" };
   return { ok: true };
 }
 
@@ -66,7 +64,8 @@ export async function grantFromCheckoutSession(
 ): Promise<GrantResult> {
   const valid = validateSession(s, stripeEnvTag());
   if (!valid.ok) return valid;
-  const userId = sessionUserId(s)!;
+  const email = normalizeEmail(sessionEmail(s)!);
+  const userId = (await ensureBuyer(email)).id;
 
   const pi = s.payment_intent;
   const piId = idOf(pi as string | { id: string } | null);
@@ -91,7 +90,7 @@ export async function grantFromCheckoutSession(
       status: "paid",
       promoCode: idOf(promo as string | { id: string } | null | undefined),
       receiptUrl,
-      email: s.customer_details?.email?.toLowerCase() ?? null,
+      email,
       source,
     })
     .onConflictDoNothing({ target: orders.stripeSessionId });
@@ -124,6 +123,7 @@ export async function grantFromCheckoutSession(
   return {
     ok: true,
     userId,
+    email,
     orderId: order.id,
     newlyGranted: before === null,
     amountTotal: order.amountTotal,

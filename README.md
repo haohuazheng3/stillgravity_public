@@ -2,14 +2,15 @@
 
 Honest, research-backed guidance for men on attraction, dating and relationships, and the home of the field manual *What She Won't Tell You*. Live at [stillgravity.com](https://stillgravity.com).
 
-This repository is the complete web app: a statically generated content site with a free sample of the book, an interactive Situation Finder, a blog system, passwordless accounts, one-time checkout, and private delivery of a personalized PDF.
+This repository is the complete web app: a statically generated content site with a free sample of the book, an interactive Situation Finder, a blog system, guest checkout (no accounts: buyers pay with their email), and private delivery of a personalized PDF.
 
 ## Stack
 
 - **Next.js 16** (App Router, Turbopack, React 19) and **Tailwind CSS v4**
 - **Neon Postgres** with **Drizzle ORM** (HTTP driver; migrations in `drizzle/`)
-- **Clerk** for passwordless email-code sign-in (one combined sign-in-or-up flow)
-- **Stripe Checkout** for the one-time purchase; the success page verifies the session server-side and unlocks immediately, a signed webhook is the fallback, and a reconcile job compares Stripe with the database
+- **Clerk** only for the owner's admin sign-in; buyers never sign in
+- **Stripe Checkout** for the one-time guest purchase; the success page verifies the session server-side and offers the download immediately, a signed webhook is the fallback, and a reconcile job compares Stripe with the database
+- **Resend** emails each buyer their watermarked PDF (exactly once per order, retried by the reconcile job); signed links let them download it again
 - **Cloudflare**: R2 for private files behind a small Worker that serves short-lived HMAC-signed links, and an Email Worker for a test inbox and owner alerts
 - Self-hosted error inbox, health endpoint, Postgres rate limiting, and MDX articles with automatic internal links and structured data
 

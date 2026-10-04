@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
+import { after } from "next/server";
 import { BookVisual } from "@/components/BookVisual";
 import { LibraryActions } from "@/components/LibraryActions";
 import { PurchaseEvents } from "@/components/PurchaseEvents";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { Container } from "@/components/ui";
 import { grantFromCheckoutSession } from "@/lib/entitlements";
+import { deliverOrder } from "@/lib/delivery";
+import { createDownloadToken, DOWNLOAD_LINK_DAYS } from "@/lib/download-token";
 import { stripe } from "@/lib/stripe";
 import { captureError } from "@/lib/errors";
-import { ensureUser } from "@/lib/users";
 import { orderRef } from "@/lib/ids";
 import { BOOK, SITE } from "@/lib/site";
 
@@ -25,17 +26,26 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ContactLine() {
+  return (
+    <>
+      email{" "}
+      <a href={`mailto:${SITE.email}`} className="text-accent-text underline">
+        {SITE.email}
+      </a>
+    </>
+  );
+}
+
 /**
- * Primary unlock path: verify the Checkout Session with Stripe right here and grant on
- * the spot (never wait for the webhook). The webhook and the reconcile job are the
- * fallbacks; all three share the same idempotent grant.
+ * Primary unlock path: verify the Checkout Session with Stripe right here, grant the book
+ * to the checkout email on the spot and show the download. The delivery email goes out
+ * after the response; the webhook and the reconcile job are the fallbacks for both.
  */
 export default async function SuccessPage(props: PageProps<"/checkout/success">) {
-  const { userId } = await auth();
   const sp = await props.searchParams;
   const sessionId = typeof sp.session_id === "string" ? sp.session_id : "";
-  if (!userId) redirect(`/sign-in?redirect_url=${encodeURIComponent(`/checkout/success?session_id=${sessionId}`)}`);
-  if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(sessionId)) redirect("/account");
+  if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(sessionId)) redirect("/book");
 
   let session;
   try {
@@ -47,30 +57,9 @@ export default async function SuccessPage(props: PageProps<"/checkout/success">)
         <div className="slab p-7 sm:p-10" role="alert">
           <h1 className="headline text-[1.8rem] text-ink">We couldn’t confirm that checkout yet.</h1>
           <p className="mt-3 text-[1rem] text-ink-3">
-            If you were charged, your book will appear in your library within a minute. If it doesn’t, email{" "}
-            <a href={`mailto:${SITE.email}`} className="text-accent-text underline">
-              {SITE.email}
-            </a>{" "}
+            If you were charged, your PDF is on its way to the email you entered at checkout. Nothing there in ten minutes? <ContactLine />{" "}
             and we’ll sort it out right away.
           </p>
-          <Link href="/account" className="btn btn-primary mt-6">
-            Open my library
-          </Link>
-        </div>
-      </Shell>
-    );
-  }
-
-  const owner = session.client_reference_id || session.metadata?.userId;
-  if (owner && owner !== userId) {
-    return (
-      <Shell>
-        <div className="slab p-7 sm:p-10" role="alert">
-          <h1 className="headline text-[1.8rem] text-ink">This purchase belongs to another account.</h1>
-          <p className="mt-3 text-[1rem] text-ink-3">Sign out and sign in with the email you used before checkout to see the book.</p>
-          <Link href="/account" className="btn btn-ghost mt-6">
-            Go to my library
-          </Link>
         </div>
       </Shell>
     );
@@ -84,8 +73,8 @@ export default async function SuccessPage(props: PageProps<"/checkout/success">)
           <p className="tag tag-accent">Confirming payment</p>
           <h1 className="headline mt-4 text-[1.8rem] text-ink">Your bank is still confirming the payment.</h1>
           <p className="mt-3 text-[1rem] text-ink-3">
-            This page checks again every few seconds. Some payment methods take a moment; the book unlocks automatically the
-            second it clears.
+            This page checks again every few seconds. Some payment methods take a moment; the download appears here and the PDF goes to
+            your email the second it clears.
           </p>
           <div className="mt-5 space-y-2">
             <div className="skeleton h-3 w-full" />
@@ -104,21 +93,18 @@ export default async function SuccessPage(props: PageProps<"/checkout/success">)
         <div className="slab p-7 sm:p-10" role="alert">
           <h1 className="headline text-[1.8rem] text-ink">Something doesn’t add up with this checkout.</h1>
           <p className="mt-3 text-[1rem] text-ink-3">
-            We’ve been alerted and will check it now. If you paid, you won’t lose anything: email{" "}
-            <a href={`mailto:${SITE.email}`} className="text-accent-text underline">
-              {SITE.email}
-            </a>{" "}
-            and we’ll reply quickly.
+            We’ve been alerted and will check it now. If you paid, you won’t lose anything: <ContactLine /> and we’ll reply quickly.
           </p>
-          <Link href="/account" className="btn btn-ghost mt-6">
-            Open my library
-          </Link>
         </div>
       </Shell>
     );
   }
 
-  const user = await ensureUser(userId);
+  // Email the personal copy after the page is sent (idempotent; the webhook may race us).
+  after(async () => {
+    await deliverOrder(grant.orderId).catch((err) => captureError(err, { route: "/checkout/success", context: { stage: "deliver", orderId: grant.orderId } }));
+  });
+  const token = createDownloadToken(grant.userId);
 
   return (
     <Shell>
@@ -126,22 +112,24 @@ export default async function SuccessPage(props: PageProps<"/checkout/success">)
       <div className="slab overflow-hidden p-6 sm:p-10">
         <div className="grid items-center gap-8 md:grid-cols-[200px_1fr] md:gap-12">
           <BookVisual className="mx-auto w-[48%] max-w-[200px] md:w-full" sizes="200px" />
-          <div>
-            <p className="tag tag-ok">Unlocked · order {orderRef(grant.orderId)}</p>
+          <div className="min-w-0">
+            <p className="tag tag-ok">Paid · order {orderRef(grant.orderId)}</p>
             <h1 className="display mt-4 text-[2.3rem] text-ink sm:text-[2.8rem]">You’re in.</h1>
             <p className="mt-3 text-[1.02rem] leading-relaxed text-ink-3">
-              {BOOK.displayTitle} is in your library for good. Start with the Situation Finder on page 10, or read Part 1 tonight.
+              Your personal copy of {BOOK.displayTitle} is ready. Start with the Situation Finder on page 10, or read Part 1 tonight.
             </p>
             <div className="mt-6">
-              <LibraryActions />
+              <LibraryActions token={token} />
             </div>
-            <p className="mt-4 text-[0.85rem] text-ink-4">
-              A receipt goes to {session.customer_details?.email ?? user.email}. Your library is always at{" "}
-              <Link href="/account" className="underline underline-offset-4">
-                stillgravity.com/account
+            <div className="slab-inset mt-5 p-4 text-[0.9rem] leading-relaxed text-ink-3">
+              We’ve also emailed the PDF to <strong className="break-all text-ink">{grant.email}</strong>. It usually arrives within a
+              minute; check spam or promotions if you don’t see it. These buttons keep working for {DOWNLOAD_LINK_DAYS} days, and you can
+              always get a fresh link at{" "}
+              <Link href="/download" className="underline underline-offset-4">
+                stillgravity.com/download
               </Link>
               .
-            </p>
+            </div>
           </div>
         </div>
       </div>

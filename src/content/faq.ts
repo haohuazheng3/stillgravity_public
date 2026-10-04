@@ -14,17 +14,17 @@ export const FAQS: Faq[] = [
   },
   {
     q: "How much is it? Is it a subscription?",
-    a: `${BOOK.priceLabel}, once. No subscription and no upsells. Your copy stays in your library, and updates to this edition are free.`,
+    a: `${BOOK.priceLabel}, once. No subscription and no upsells. Updates to this edition are free and go to the email you bought with.`,
     tags: ["buying"],
   },
   {
     q: "How do I get the book after paying?",
-    a: "Instantly. Checkout sends you straight back to your library, where you can read it in the browser or download the PDF. It stays one click away in your account on any device.",
+    a: "Two ways, at once. The page you land on after paying has the download, and we email your PDF to the address you entered at checkout, usually within a minute. Lost the email later? Enter that address at stillgravity.com/download and we send it again with a fresh link.",
     tags: ["buying", "account"],
   },
   {
-    q: "Why do I need an account to buy?",
-    a: "So your purchase is tied to you and can never get lost. There is no password: enter your email, type the six-digit code we send, and you’re in. The same email brings you back to your library on any device.",
+    q: "Do I need an account to buy?",
+    a: "No. There is nothing to sign up for and no password. You enter your email on Stripe’s secure checkout page; that email is where the PDF goes, and it’s how we find your order if you ever need the file again.",
     tags: ["account", "buying"],
   },
   {
@@ -69,7 +69,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: "What’s your refund policy?",
-    a: `If the book isn’t for you, email us within ${BOOK.refundDays} days of purchase and we’ll refund you in full. No forms, no arguments. Refunds go back to the original payment method and access to the copy ends.`,
+    a: `If the book isn’t for you, email us within ${BOOK.refundDays} days of purchase and we’ll refund you in full. No forms, no arguments. Refunds go back to the original payment method and your download links stop working.`,
     tags: ["buying"],
   },
   {

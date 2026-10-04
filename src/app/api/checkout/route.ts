@@ -1,76 +1,42 @@
-import { auth } from "@clerk/nextjs/server";
-import { and, desc, eq, gt, sql } from "drizzle-orm";
-import type Stripe from "stripe";
-import { db } from "@/lib/db";
-import { checkoutAttempts } from "@/lib/db/schema";
-import { ensureUser, setStripeCustomer } from "@/lib/users";
-import { hasBook } from "@/lib/entitlements";
+import { z } from "zod";
 import { CHECKOUT_BRAND, paymentsEnabled, stripe, stripeEnvTag } from "@/lib/stripe";
 import { captureError } from "@/lib/errors";
-import { rateLimit, tooMany } from "@/lib/ratelimit";
-import { newId } from "@/lib/ids";
+import { clientIp, ipHash, rateLimit, tooMany } from "@/lib/ratelimit";
+import { newToken } from "@/lib/ids";
 import { IS_PRODUCTION_DEPLOY, requireEnv } from "@/lib/env";
 import { BOOK, PRODUCT_ID, SITE } from "@/lib/site";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** A per-attempt nonce from the browser: double taps and retries of one attempt reuse one session. */
+const Body = z.object({ nonce: z.string().regex(/^[A-Za-z0-9_-]{16,64}$/).optional() });
+
+/**
+ * Guest checkout: no account. Stripe collects the buyer's email; the success page, the
+ * webhook and the reconcile job grant the book to that email and send the PDF there.
+ */
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) return Response.json({ error: "sign_in_required" }, { status: 401 });
-
-    const rl = await rateLimit(`checkout:${userId}`, 10, 300);
+    const rl = await rateLimit(`checkout:${ipHash(clientIp(req.headers))}`, 10, 300);
     if (!rl.ok) return tooMany(rl);
 
     const payments = paymentsEnabled();
     if (!payments.ok) return Response.json({ error: payments.reason }, { status: 503 });
 
-    // Never sell the book twice.
-    if (await hasBook(userId)) return Response.json({ owned: true });
-
-    const user = await ensureUser(userId);
-    const s = stripe();
-
-    // Reuse a still-open session (double taps, back button, a second tab).
-    const open = await db
-      .select()
-      .from(checkoutAttempts)
-      .where(and(eq(checkoutAttempts.userId, userId), gt(checkoutAttempts.expiresAt, sql`now() + interval '2 minutes'`)))
-      .orderBy(desc(checkoutAttempts.createdAt))
-      .limit(1);
-    if (open[0]) {
-      const existing = await s.checkout.sessions.retrieve(open[0].sessionId).catch(() => null);
-      if (existing?.status === "open" && existing.url) return Response.json({ url: existing.url, reused: true });
-    }
-
-    // One Stripe customer per account, so receipts and refunds share a history.
-    let customerId = user.stripeCustomerId;
-    if (customerId) {
-      const c = await s.customers.retrieve(customerId).catch(() => null);
-      if (!c || (c as Stripe.DeletedCustomer).deleted) customerId = null;
-    }
-    if (!customerId) {
-      const c = await s.customers.create(
-        { email: user.email, metadata: { userId, site: CHECKOUT_BRAND.site } },
-        { idempotencyKey: `sg-cus-${userId}` },
-      );
-      customerId = c.id;
-      await setStripeCustomer(userId, customerId);
-    }
+    const parsed = Body.safeParse(await req.json().catch(() => ({})));
+    const nonce = parsed.success && parsed.data.nonce ? parsed.data.nonce : newToken(12);
 
     const origin = IS_PRODUCTION_DEPLOY ? SITE.url : new URL(req.url).origin;
-    const metadata = { userId, product: PRODUCT_ID, site: CHECKOUT_BRAND.site, env: stripeEnvTag() };
+    const metadata = { product: PRODUCT_ID, site: CHECKOUT_BRAND.site, env: stripeEnvTag() };
     const note = CHECKOUT_BRAND.operatorNote();
     const suffix = CHECKOUT_BRAND.statementSuffix();
-    const minute = Math.floor(Date.now() / 60000);
 
-    const session = await s.checkout.sessions.create(
+    const session = await stripe().checkout.sessions.create(
       {
         mode: "payment",
         line_items: [{ price: requireEnv("STRIPE_PRICE_BOOK"), quantity: 1 }],
-        customer: customerId,
-        client_reference_id: userId,
+        customer_creation: "always",
         metadata,
         payment_intent_data: {
           metadata,
@@ -87,23 +53,12 @@ export async function POST(req: Request) {
           border_style: "rounded",
           icon: { type: "url", url: CHECKOUT_BRAND.iconUrl },
         },
-        ...(note ? { custom_text: { submit: { message: note } } } : {}),
+        custom_text: { submit: { message: note ? `${CHECKOUT_BRAND.deliveryNote} ${note}` : CHECKOUT_BRAND.deliveryNote } },
       },
-      { idempotencyKey: `sg-co-${userId}-${minute}` },
+      { idempotencyKey: `sg-co-${nonce}` },
     );
 
     if (!session.url) throw new Error("Stripe returned a session without a URL");
-    await db
-      .insert(checkoutAttempts)
-      .values({
-        id: newId("cha"),
-        userId,
-        sessionId: session.id,
-        url: session.url,
-        expiresAt: new Date((session.expires_at ?? Math.floor(Date.now() / 1000) + 1800) * 1000),
-      })
-      .onConflictDoNothing();
-
     return Response.json({ url: session.url });
   } catch (err) {
     await captureError(err, { route: "/api/checkout" });
