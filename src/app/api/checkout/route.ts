@@ -4,7 +4,7 @@ import type Stripe from "stripe";
 import { db } from "@/lib/db";
 import { checkoutAttempts } from "@/lib/db/schema";
 import { ensureUser, setStripeCustomer } from "@/lib/users";
-import { hasBook } from "@/lib/entitlements";
+import { hasBook, healFromRecentCheckouts } from "@/lib/entitlements";
 import { CHECKOUT_BRAND, paymentsEnabled, stripe, stripeEnvTag } from "@/lib/stripe";
 import { captureError } from "@/lib/errors";
 import { rateLimit, tooMany } from "@/lib/ratelimit";
@@ -26,8 +26,9 @@ export async function POST(req: Request) {
     const payments = paymentsEnabled();
     if (!payments.ok) return Response.json({ error: payments.reason }, { status: 503 });
 
-    // Never sell the book twice.
+    // Never sell the book twice, including a payment whose success page never loaded.
     if (await hasBook(userId)) return Response.json({ owned: true });
+    if (await healFromRecentCheckouts(userId)) return Response.json({ owned: true });
 
     const user = await ensureUser(userId);
     const s = stripe();

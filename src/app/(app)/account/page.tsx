@@ -7,7 +7,7 @@ import { BookVisual } from "@/components/BookVisual";
 import { LibraryActions } from "@/components/LibraryActions";
 import { BuyButton, Container, TrustLine } from "@/components/ui";
 import { ensureUser } from "@/lib/users";
-import { activeEntitlement, ordersForUser } from "@/lib/entitlements";
+import { activeEntitlement, healFromRecentCheckouts, ordersForUser } from "@/lib/entitlements";
 import { BOOK, SITE } from "@/lib/site";
 import { orderRef } from "@/lib/ids";
 import { db } from "@/lib/db";
@@ -27,7 +27,7 @@ export default async function AccountPage(props: PageProps<"/account">) {
   if (!userId) redirect("/sign-in?redirect_url=/account");
   const sp = await props.searchParams;
 
-  const [user, ent, orders, copy] = await Promise.all([
+  const [user, firstEnt, firstOrders, copy] = await Promise.all([
     ensureUser(userId),
     activeEntitlement(userId),
     ordersForUser(userId),
@@ -37,6 +37,9 @@ export default async function AccountPage(props: PageProps<"/account">) {
       .where(and(eq(licensedCopies.userId, userId), eq(licensedCopies.product, PRODUCT_ID)))
       .limit(1),
   ]);
+  // Paid but never reached the success page? Recover it here, before showing an empty shelf.
+  const healed = !firstEnt && (await healFromRecentCheckouts(userId));
+  const [ent, orders] = healed ? await Promise.all([activeEntitlement(userId), ordersForUser(userId)]) : [firstEnt, firstOrders];
 
   return (
     <Container className="pt-10 sm:pt-14">

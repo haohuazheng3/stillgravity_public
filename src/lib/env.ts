@@ -37,13 +37,15 @@ export function isAdminEmail(email: string | null | undefined): boolean {
   return adminEmails().includes(email.trim().toLowerCase());
 }
 
-/** Variables the site needs to be fully functional; /api/health reports which are missing (names only). */
+/**
+ * Variables the site needs to be fully functional; /api/health reports which are missing (names only).
+ * STRIPE_WEBHOOK_SECRET is optional: without it Stripe events arrive through the pull sync.
+ */
 export const REQUIRED_ENV = [
   "DATABASE_URL",
   "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
   "CLERK_SECRET_KEY",
   "STRIPE_SECRET_KEY",
-  "STRIPE_WEBHOOK_SECRET",
   "STRIPE_PRICE_BOOK",
   "FILES_BASE_URL",
   "FILES_SIGNING_SECRET",
