@@ -1,10 +1,18 @@
+import { timingSafeEqual } from "node:crypto";
 import { isNull, sql, and, like } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { errorGroups } from "@/lib/db/schema";
-import { cronAuthorized } from "@/lib/cron-auth";
+import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function authorized(req: Request): boolean {
+  const secret = env("CRON_SECRET");
+  const got = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (!secret || !got || got.length !== secret.length) return false;
+  return timingSafeEqual(Buffer.from(got), Buffer.from(secret));
+}
 
 /**
  * Operator endpoint (Bearer CRON_SECRET), used by verification scripts:
@@ -12,7 +20,7 @@ export const dynamic = "force-dynamic";
  *  POST ?action=resolve-drills  → resolve the deliberate "Diagnostics:" errors after a drill
  */
 export async function POST(req: Request) {
-  if (!cronAuthorized(req)) return Response.json({ error: "unauthorized" }, { status: 401 });
+  if (!authorized(req)) return Response.json({ error: "unauthorized" }, { status: 401 });
   const action = new URL(req.url).searchParams.get("action");
   if (action === "throw") {
     throw new Error(`Diagnostics: deliberate server error via ops at ${new Date().toISOString()}`);

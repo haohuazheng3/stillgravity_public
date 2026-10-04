@@ -37,7 +37,7 @@ export const orders = pgTable(
     promoCode: text("promo_code"),
     receiptUrl: text("receipt_url"),
     email: text("email"),
-    source: text("source").notNull(), // success_page | webhook | sync | self_heal | reconcile
+    source: text("source").notNull(), // success_page | webhook | reconcile
     createdAt: createdAt(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     refundedAt: timestamp("refunded_at", { withTimezone: true }),
@@ -64,7 +64,7 @@ export const entitlements = pgTable(
   (t) => [uniqueIndex("entitlements_user_product_uq").on(t.userId, t.product)],
 );
 
-/** Every Stripe event we applied (webhook or pull sync), keyed by event id: the idempotency ledger. */
+/** Every Stripe event we accepted, keyed by event id: the webhook's idempotency ledger. */
 export const stripeEvents = pgTable("stripe_events", {
   id: text("id").primaryKey(),
   type: text("type").notNull(),

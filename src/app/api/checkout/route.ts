@@ -4,7 +4,7 @@ import type Stripe from "stripe";
 import { db } from "@/lib/db";
 import { checkoutAttempts } from "@/lib/db/schema";
 import { ensureUser, setStripeCustomer } from "@/lib/users";
-import { hasBook, healFromRecentCheckouts } from "@/lib/entitlements";
+import { hasBook } from "@/lib/entitlements";
 import { CHECKOUT_BRAND, paymentsEnabled, stripe, stripeEnvTag } from "@/lib/stripe";
 import { captureError } from "@/lib/errors";
 import { rateLimit, tooMany } from "@/lib/ratelimit";
@@ -26,9 +26,8 @@ export async function POST(req: Request) {
     const payments = paymentsEnabled();
     if (!payments.ok) return Response.json({ error: payments.reason }, { status: 503 });
 
-    // Never sell the book twice, including a payment whose success page never loaded.
+    // Never sell the book twice.
     if (await hasBook(userId)) return Response.json({ owned: true });
-    if (await healFromRecentCheckouts(userId)) return Response.json({ owned: true });
 
     const user = await ensureUser(userId);
     const s = stripe();
@@ -63,6 +62,7 @@ export async function POST(req: Request) {
     const origin = IS_PRODUCTION_DEPLOY ? SITE.url : new URL(req.url).origin;
     const metadata = { userId, product: PRODUCT_ID, site: CHECKOUT_BRAND.site, env: stripeEnvTag() };
     const note = CHECKOUT_BRAND.operatorNote();
+    const suffix = CHECKOUT_BRAND.statementSuffix();
     const minute = Math.floor(Date.now() / 60000);
 
     const session = await s.checkout.sessions.create(
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
         payment_intent_data: {
           metadata,
           description: `${BOOK.title} (ebook)`,
-          statement_descriptor_suffix: CHECKOUT_BRAND.statementSuffix(),
+          ...(suffix ? { statement_descriptor_suffix: suffix } : {}),
         },
         allow_promotion_codes: true,
         success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,

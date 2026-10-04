@@ -9,7 +9,7 @@ This repository is the complete web app: a statically generated content site wit
 - **Next.js 16** (App Router, Turbopack, React 19) and **Tailwind CSS v4**
 - **Neon Postgres** with **Drizzle ORM** (HTTP driver; migrations in `drizzle/`)
 - **Clerk** for passwordless email-code sign-in (one combined sign-in-or-up flow)
-- **Stripe Checkout** for the one-time purchase; the success page verifies the session server-side and unlocks immediately. Stripe events (missed unlocks, refunds, disputes) are applied exactly once through a signed webhook or, when no endpoint is configured, a scheduled pull of the Stripe event log; a signed-in buyer whose success page never loaded is also recovered on their next visit, and a daily reconcile job compares Stripe with the database
+- **Stripe Checkout** for the one-time purchase; the success page verifies the session server-side and unlocks immediately, a signed webhook is the fallback, and a reconcile job compares Stripe with the database
 - **Cloudflare**: R2 for private files behind a small Worker that serves short-lived HMAC-signed links, and an Email Worker for a test inbox and owner alerts
 - Self-hosted error inbox, health endpoint, Postgres rate limiting, and MDX articles with automatic internal links and structured data
 

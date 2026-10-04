@@ -7,10 +7,8 @@
  *             not bounce mail back to a sender.
  * fetch()     POST /notify (Bearer NOTIFY_TOKEN) emails the owner through the send_email
  *             binding. GET /health answers 200.
- * scheduled() Every 30 minutes: run the app's Stripe event sync (POST /api/cron/stripe-sync, Bearer
- *             CRON_SECRET; replaces a webhook on the shared Stripe account), then probe
- *             https://stillgravity.com/api/health. On failure, email the owner (at most every
- *             3 hours while it stays down); email again when it recovers.
+ * scheduled() Every 30 minutes: probe https://stillgravity.com/api/health. On failure, email the
+ *             owner (at most every 3 hours while it stays down); email again when it recovers.
  */
 import PostalMime from "postal-mime";
 import { EmailMessage } from "cloudflare:email";
@@ -20,7 +18,6 @@ export interface Env {
   OWNER_EMAIL: string;
   INBOX_INGEST_SECRET: string;
   NOTIFY_TOKEN: string;
-  CRON_SECRET?: string;
   OWNER_MAIL: { send(message: EmailMessage): Promise<void> };
 }
 
@@ -187,26 +184,6 @@ async function probe(env: Env): Promise<void> {
   }
 }
 
-/* ---------- Stripe event sync ---------- */
-
-async function syncStripe(env: Env): Promise<void> {
-  if (!env.CRON_SECRET) {
-    console.error("[stillgravity-mail] CRON_SECRET missing: Stripe event sync skipped");
-    return;
-  }
-  try {
-    const res = await fetch(`${env.APP_URL.replace(/\/$/, "")}/api/cron/stripe-sync`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${env.CRON_SECRET}`, "user-agent": "stillgravity-cron/1.0" },
-      signal: AbortSignal.timeout(60000),
-    });
-    // A failed run surfaces through /api/health (stale sync) and the app's error inbox.
-    if (!res.ok) console.error("[stillgravity-mail] stripe sync responded", res.status, (await res.text().catch(() => "")).slice(0, 300));
-  } catch (e) {
-    console.error("[stillgravity-mail] stripe sync failed", e instanceof Error ? e.message : String(e));
-  }
-}
-
 export default {
   async email(message: IncomingEmail, env: Env): Promise<void> {
     try {
@@ -251,7 +228,6 @@ export default {
   },
 
   async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
-    // Sync first, so the probe sees a fresh sync timestamp.
-    ctx.waitUntil(syncStripe(env).then(() => probe(env)));
+    ctx.waitUntil(probe(env));
   },
 };

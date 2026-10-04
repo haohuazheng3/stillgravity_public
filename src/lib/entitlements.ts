@@ -1,21 +1,17 @@
 import "server-only";
 import type Stripe from "stripe";
-import { and, desc, eq, gt, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "./db";
-import { checkoutAttempts, entitlements, orders } from "./db/schema";
+import { entitlements, orders } from "./db/schema";
 import { newId } from "./ids";
 import { PRODUCT_ID } from "./site";
-import { CHECKOUT_BRAND, stripe, stripeEnvTag } from "./stripe";
-import { captureError } from "./errors";
+import { CHECKOUT_BRAND, stripeEnvTag } from "./stripe";
 
 /*
- * The ONLY place that decides who owns the book. The success page (primary path), the
- * Stripe event paths (webhook or pull sync), the self-heal on /account and /api/checkout,
- * and the reconcile job all call grantFromCheckoutSession, which is idempotent on the
- * Checkout Session id.
+ * The ONLY place that decides who owns the book. The success page (primary path),
+ * the webhook (fallback) and the reconcile job all call grantFromCheckoutSession,
+ * which is idempotent on the Checkout Session id.
  */
-
-export type GrantSource = "success_page" | "webhook" | "sync" | "self_heal" | "reconcile";
 
 export type OrderRow = typeof orders.$inferSelect;
 export type EntitlementRow = typeof entitlements.$inferSelect;
@@ -64,7 +60,10 @@ function idOf(v: string | { id: string } | null | undefined): string | null {
   return typeof v === "string" ? v : v.id;
 }
 
-export async function grantFromCheckoutSession(s: Stripe.Checkout.Session, source: GrantSource): Promise<GrantResult> {
+export async function grantFromCheckoutSession(
+  s: Stripe.Checkout.Session,
+  source: "success_page" | "webhook" | "reconcile",
+): Promise<GrantResult> {
   const valid = validateSession(s, stripeEnvTag());
   if (!valid.ok) return valid;
   const userId = sessionUserId(s)!;
@@ -130,37 +129,6 @@ export async function grantFromCheckoutSession(s: Stripe.Checkout.Session, sourc
     amountTotal: order.amountTotal,
     currency: order.currency,
   };
-}
-
-/**
- * "Paid, then closed the tab before the success page loaded": look at this user's Checkout
- * Sessions from the last 3 days and grant any that Stripe reports as paid. Only called for
- * signed-in users who don't own the book yet, so it costs nothing for everyone else.
- */
-export async function healFromRecentCheckouts(userId: string): Promise<boolean> {
-  try {
-    const attempts = await db
-      .select({ id: checkoutAttempts.id, sessionId: checkoutAttempts.sessionId })
-      .from(checkoutAttempts)
-      .where(and(eq(checkoutAttempts.userId, userId), gt(checkoutAttempts.createdAt, sql`now() - interval '3 days'`)))
-      .orderBy(desc(checkoutAttempts.createdAt))
-      .limit(5);
-    for (const a of attempts) {
-      const s = await stripe().checkout.sessions.retrieve(a.sessionId, { expand: ["payment_intent.latest_charge"] });
-      if (s.status === "expired") {
-        // Nothing left to reuse or recover; keeps later checks to the sessions that matter.
-        await db.delete(checkoutAttempts).where(eq(checkoutAttempts.id, a.id));
-        continue;
-      }
-      if (s.status !== "complete") continue;
-      const r = await grantFromCheckoutSession(s, "self_heal");
-      if (r.ok) return true;
-    }
-    return false;
-  } catch (err) {
-    await captureError(err, { route: "self-heal", severity: "warn", context: { userId } });
-    return false;
-  }
 }
 
 /** Refund or lost dispute: mark the order and revoke access. Returns the affected user, if any. */
