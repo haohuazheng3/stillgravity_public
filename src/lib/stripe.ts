@@ -1,6 +1,7 @@
 import "server-only";
 import Stripe from "stripe";
 import { env, IS_PRODUCTION_DEPLOY, VERCEL_ENV } from "./env";
+import { SITE } from "./site";
 
 let client: Stripe | null = null;
 
@@ -19,7 +20,7 @@ export function stripeMode(): "live" | "test" | "missing" {
   return key.includes("_live_") ? "live" : "test";
 }
 
-/** Tag written into every session's metadata; the webhook ignores sessions from other environments. */
+/** Tag written into every session's metadata; event handling ignores sessions from other environments. */
 export function stripeEnvTag(): string {
   return VERCEL_ENV;
 }
@@ -46,6 +47,8 @@ export const CHECKOUT_BRAND = {
   site: "stillgravity",
   displayName: "Still Gravity",
   buttonColor: "#E9A93B",
+  /** Square brand mark next to the name at the top of Checkout (Stripe fetches it from our own domain). */
+  iconUrl: `${SITE.url}/brand/logo-512.png`,
   /** Appended to the account prefix on card statements (max 22 chars in total). */
   statementSuffix: () => env("STRIPE_DESCRIPTOR_SUFFIX") ?? "STILLGRAV",
   /**

@@ -85,6 +85,7 @@ export async function POST(req: Request) {
           display_name: CHECKOUT_BRAND.displayName,
           button_color: CHECKOUT_BRAND.buttonColor,
           border_style: "rounded",
+          icon: { type: "url", url: CHECKOUT_BRAND.iconUrl },
         },
         ...(note ? { custom_text: { submit: { message: note } } } : {}),
       },
