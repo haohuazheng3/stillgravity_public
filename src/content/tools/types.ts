@@ -81,13 +81,14 @@ export interface CalcInput {
   max?: number;
   step?: number;
   unit?: string;
-  default: number;
+  /** null leaves an optional number field empty. */
+  default: number | null;
   /** For selects: value is a number the formula reads. */
   options?: { label: string; value: number }[];
 }
 
 /** Calculators are fixed formulas implemented in the renderer; the data only names one. */
-export type Formula = "ageRule";
+export type Formula = "ageRule" | "datesToRelationship";
 
 export interface CalculatorTool {
   kind: "calculator";

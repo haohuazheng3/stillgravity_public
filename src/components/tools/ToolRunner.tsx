@@ -299,7 +299,7 @@ function DecisionView({ tool, ...shared }: { tool: DecisionTool } & Shared) {
 /* ---------- calculator ---------- */
 
 function CalculatorView({ tool, ...shared }: { tool: CalculatorTool } & Shared) {
-  const initial = Object.fromEntries(tool.inputs.map((i) => [i.id, i.default]));
+  const initial: Record<string, number> = Object.fromEntries(tool.inputs.map((i) => [i.id, i.default ?? NaN]));
   const [values, setValues] = useState<Record<string, number>>(initial);
   const [shown, setShown] = useState(false);
   const start = useStartOnce(tool.id);
