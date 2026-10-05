@@ -81,4 +81,22 @@ export const FORMULAS: Record<Formula, (v: Record<string, number>) => FormulaOut
     if (done < 4) return { result: "almost", lines };
     return { result: "ready", lines };
   },
+  /**
+   * Engagement ring budget. Shows the advertising rule (two months of pay) and the
+   * average spend for reference, then a cash-only comfortable budget: money already
+   * saved, capped at about one month of take-home pay; high-interest debt comes first.
+   */
+  ringBudget: (v) => {
+    const pay = Math.max(0, v.takehome || 0);
+    const saved = Math.max(0, v.saved || 0);
+    const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+    const lines = [
+      { label: "The ad rule: two months of take-home pay", value: usd(pay * 2) },
+      { label: "Average spend in 2025 (The Knot)", value: "$4,600" },
+      { label: "A comfortable budget for you", value: usd(v.debt >= 1 ? 0 : Math.min(saved, pay)) },
+    ];
+    if (v.debt >= 1) return { result: "debt-first", lines };
+    if (saved < 300) return { result: "save-first", lines };
+    return { result: "budget", lines };
+  },
 };
