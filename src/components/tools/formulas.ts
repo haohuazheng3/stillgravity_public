@@ -65,4 +65,20 @@ export const FORMULAS: Record<Formula, (v: Record<string, number>) => FormulaOut
     if (slowing >= 2) return { result: "slowed", lines };
     return { result: "healing", lines };
   },
+  /**
+   * When to propose. A readiness check, not a countdown: it counts the four big
+   * conversations couples usually have first, and treats under a year as early.
+   */
+  engagementTiming: (v) => {
+    const months = Math.max(0, Math.floor(v.months || 0));
+    const done = (v.talked >= 2 ? 1 : 0) + (v.bigthings >= 2 ? 1 : 0) + (v.conflict >= 1 ? 1 : 0) + (v.families >= 1 ? 1 : 0);
+    const lines = [
+      { label: "Months together", value: `${months}` },
+      { label: "Big conversations done", value: `${done} of 4` },
+    ];
+    if (!(v.talked >= 1)) return { result: "talk-first", lines };
+    if (months < 12) return { result: "early", lines };
+    if (done < 4) return { result: "almost", lines };
+    return { result: "ready", lines };
+  },
 };

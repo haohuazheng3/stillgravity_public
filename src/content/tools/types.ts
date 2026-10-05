@@ -101,7 +101,7 @@ export interface CalcInput {
 }
 
 /** Calculators are fixed formulas implemented in the renderer; the data only names one. */
-export type Formula = "ageRule" | "datesToRelationship" | "breakupRecovery";
+export type Formula = "ageRule" | "datesToRelationship" | "breakupRecovery" | "engagementTiming";
 
 export interface CalculatorTool {
   kind: "calculator";
