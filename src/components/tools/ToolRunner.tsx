@@ -187,6 +187,14 @@ function scoreQuiz(tool: QuizTool, answers: number[]): ToolResult {
   for (const f of tool.flags ?? []) {
     if (chosen.some((o) => o?.flag === f.flag)) return tool.results.find((r) => r.id === f.result)!;
   }
+  if (tool.axes) {
+    const total = (axis: "x" | "y") => chosen.reduce((s, o, qi) => s + (tool.questions[qi].axis === axis ? (o?.points ?? 0) : 0), 0);
+    const hx = total("x") >= tool.axes.cut.x;
+    const hy = total("y") >= tool.axes.cut.y;
+    const c = tool.axes.cells;
+    const id = hx ? (hy ? c.highHigh : c.highLow) : hy ? c.lowHigh : c.lowLow;
+    return tool.results.find((r) => r.id === id)!;
+  }
   const score = chosen.reduce((s, o) => s + (o?.points ?? 0), 0);
   const band = tool.bands.find((b) => score >= b.min && score <= b.max) ?? tool.bands[tool.bands.length - 1];
   return tool.results.find((r) => r.id === band.result)!;

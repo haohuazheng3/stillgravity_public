@@ -34,7 +34,18 @@ export interface QuizOption {
 export interface QuizQuestion {
   q: string;
   help?: string;
+  /** For two-axis quizzes: which axis this question's points count toward. */
+  axis?: "x" | "y";
   options: QuizOption[];
+}
+
+/**
+ * Two-axis scoring (e.g. attachment anxiety × avoidance). Each axis total is compared
+ * with its cut-off (high = total ≥ cut) and the pair picks one of four results.
+ */
+export interface QuizAxes {
+  cut: { x: number; y: number };
+  cells: { lowLow: string; highLow: string; lowHigh: string; highHigh: string };
 }
 
 export interface QuizTool {
@@ -46,6 +57,8 @@ export interface QuizTool {
   questions: QuizQuestion[];
   /** Score ranges (inclusive) → result id. Scores are the sum of the chosen points. */
   bands: { min: number; max: number; result: string }[];
+  /** When set, results come from the two axis totals instead of `bands`. */
+  axes?: QuizAxes;
   /** flag → result id, checked in this order before the score. */
   flags?: { flag: string; result: string }[];
   results: ToolResult[];
