@@ -45,4 +45,24 @@ export const FORMULAS: Record<Formula, (v: Record<string, number>) => FormulaOut
     if (dates < 3 || weeks < 3) return { result: "early", lines };
     return { result: "building", lines };
   },
+  /**
+   * Breakup recovery. Shows the popular "half the length of the relationship" rule as a
+   * folk rule, then reads the three things research links to slower recovery: ongoing
+   * contact, checking her profiles, and going through it alone.
+   */
+  breakupRecovery: (v) => {
+    const months = Math.max(0, v.months || 0);
+    const weeks = Math.max(0, Math.floor(v.weeks || 0));
+    const slowing = (v.contact >= 1 ? 1 : 0) + (v.checking >= 1 ? 1 : 0) + (v.support === 0 ? 1 : 0);
+    const half = months / 2;
+    const lines = [
+      { label: "The popular rule (half the relationship)", value: half >= 1 ? `${Math.round(half)} months` : `${Math.max(1, Math.round(half * 4.3))} weeks` },
+      { label: "Weeks since the breakup", value: `${weeks}` },
+      { label: "Things slowing you down", value: `${slowing} of 3` },
+    ];
+    if (weeks < 2) return { result: "fresh", lines };
+    if (weeks >= 26 && v.checking >= 2) return { result: "stuck", lines };
+    if (slowing >= 2) return { result: "slowed", lines };
+    return { result: "healing", lines };
+  },
 };
