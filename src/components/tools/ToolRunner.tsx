@@ -80,6 +80,24 @@ function CopyButton({ text, toolId }: { text: string; toolId: string }) {
   );
 }
 
+function ChapterCard({ toolId, chapter: ch, price, result }: { toolId: string; chapter: ChapterInfo; price: string; result?: string }) {
+  return (
+    <div className="slab-ink mt-5 px-5 py-4 font-sans">
+      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#f0b752]">The full playbook · chapter {ch.id}</p>
+      <p className="mt-1.5 text-[1.02rem] font-semibold text-[#edf0f6]">{ch.title}</p>
+      <p className="mt-1 text-[0.9rem] text-[#aeb8c8]">Page {ch.page} of What She Won’t Tell You: the exact words, the weak version beside the good one, and why it works.</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Link href="/book" className="btn btn-primary btn-sm" onClick={() => track("tool_cta", { tool: toolId, to: "book", result })}>
+          Get the book · {price}
+        </Link>
+        <Link href="/book/sample" className="btn btn-ghost btn-sm" onClick={() => track("tool_cta", { tool: toolId, to: "sample", result })}>
+          Read Part 1 free
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function ResultCard({
   toolId,
   result,
@@ -113,21 +131,7 @@ function ResultCard({
           <CopyButton text={result.say} toolId={toolId} />
         </div>
       ) : null}
-      {ch ? (
-        <div className="slab-ink mt-5 px-5 py-4 font-sans">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#f0b752]">The full playbook · chapter {ch.id}</p>
-          <p className="mt-1.5 text-[1.02rem] font-semibold text-[#edf0f6]">{ch.title}</p>
-          <p className="mt-1 text-[0.9rem] text-[#aeb8c8]">Page {ch.page} of What She Won’t Tell You: the exact words, the weak version beside the good one, and why it works.</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Link href="/book" className="btn btn-primary btn-sm" onClick={() => track("tool_cta", { tool: toolId, to: "book", result: result.id })}>
-              Get the book · {price}
-            </Link>
-            <Link href="/book/sample" className="btn btn-ghost btn-sm" onClick={() => track("tool_cta", { tool: toolId, to: "sample", result: result.id })}>
-              Read Part 1 free
-            </Link>
-          </div>
-        </div>
-      ) : null}
+      {ch ? <ChapterCard toolId={toolId} chapter={ch} price={price} result={result.id} /> : null}
       {method ? (
         <details className="mt-4 text-[0.88rem] text-ink-3">
           <summary className="cursor-pointer select-none font-semibold text-ink-3 hover:text-ink">How this result is worked out</summary>
@@ -402,7 +406,7 @@ function matches(item: GeneratorItem, tool: GeneratorTool, picked: Record<string
   return true;
 }
 
-function GeneratorView({ tool, chapters }: { tool: GeneratorTool } & Shared) {
+function GeneratorView({ tool, chapters, price }: { tool: GeneratorTool } & Shared) {
   const [picked, setPicked] = useState<Record<string, string>>(Object.fromEntries(tool.filters.map((f) => [f.id, f.options[0].value])));
   const [seed, setSeed] = useState(1);
   const [open, setOpen] = useState<number | null>(null);
@@ -468,14 +472,7 @@ function GeneratorView({ tool, chapters }: { tool: GeneratorTool } & Shared) {
         <span className="text-[0.82rem] text-ink-4">{pool.length} in this set</span>
       </div>
       <p className="mt-4 text-[0.9rem] leading-relaxed text-ink-3">{tool.note}</p>
-      {ch ? (
-        <p className="mt-3 text-[0.9rem] text-ink-3">
-          Full playbook: chapter {ch.id}, <span className="text-ink-2">{ch.title}</span>.{" "}
-          <Link href="/book" className="font-semibold text-accent-text hover:underline" onClick={() => track("tool_cta", { tool: tool.id, to: "book" })}>
-            See the book →
-          </Link>
-        </p>
-      ) : null}
+      {ch ? <ChapterCard toolId={tool.id} chapter={ch} price={price} /> : null}
     </div>
   );
 }
