@@ -27,6 +27,12 @@ export interface PostFaq {
   a: string;
 }
 
+/** B-level pages open with a conclusion card: the answer first, then the article. */
+export interface PostVerdict {
+  answer: string;
+  points: string[];
+}
+
 export interface Post {
   slug: string;
   category: string;
@@ -40,6 +46,11 @@ export interface Post {
   faq: PostFaq[];
   image: PostImage | null;
   chapters: string[];
+  /** Tool-first page: id of the interactive tool shown above the article. */
+  tool: string | null;
+  /** Intent level from the keyword plan: A = tool/action, B = decision. */
+  level: "A" | "B" | null;
+  verdict: PostVerdict | null;
   body: string;
   format: "md" | "mdx";
   wordCount: number;
@@ -100,6 +111,12 @@ function load(): Post[] {
           faq: Array.isArray(data.faq) ? (data.faq as PostFaq[]).filter((x) => x && x.q && x.a) : [],
           image: data.image && typeof data.image === "object" ? (data.image as PostImage) : null,
           chapters: Array.isArray(data.chapters) ? data.chapters.map(String) : [],
+          tool: typeof data.tool === "string" ? data.tool : null,
+          level: data.level === "A" || data.level === "B" ? data.level : null,
+          verdict:
+            data.verdict && typeof data.verdict === "object" && typeof data.verdict.answer === "string"
+              ? { answer: String(data.verdict.answer), points: Array.isArray(data.verdict.points) ? data.verdict.points.map(String) : [] }
+              : null,
           body: content,
           format: m[2] === "md" ? "md" : "mdx",
           wordCount: words,

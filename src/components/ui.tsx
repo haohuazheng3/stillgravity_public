@@ -42,13 +42,13 @@ export function PageHero({ eyebrow, title, lede, children }: { eyebrow?: string;
   );
 }
 
-export function Breadcrumbs({ items }: { items: { name: string; path: string }[] }) {
+export function Breadcrumbs({ items, compact = false }: { items: { name: string; path: string }[]; compact?: boolean }) {
   return (
     <>
       <nav aria-label="Breadcrumb" className="text-[0.85rem] text-ink-4">
         <ol className="flex flex-wrap items-center gap-1.5">
           {items.map((it, i) => (
-            <li key={it.path} className="flex items-center gap-1.5">
+            <li key={it.path} className={`items-center gap-1.5 ${compact && i === items.length - 1 ? "hidden sm:flex" : "flex"}`}>
               {i > 0 ? <span aria-hidden>/</span> : null}
               {i < items.length - 1 ? (
                 <Link href={it.path} className="hover:text-ink-2">

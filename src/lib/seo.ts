@@ -174,3 +174,22 @@ export function articleLd(post: Post, url: string) {
 export function serializeLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
+
+/** Free interactive tool at the top of a guide. No ratings: we never publish ones we didn't collect. */
+export function webAppLd(name: string, description: string, url: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name,
+    description,
+    url: absoluteUrl(url),
+    applicationCategory: "LifestyleApplication",
+    operatingSystem: "Any",
+    browserRequirements: "Requires JavaScript",
+    isAccessibleForFree: true,
+    inLanguage: "en",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    publisher: { "@id": ORG_ID },
+  };
+}
+

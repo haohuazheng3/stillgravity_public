@@ -6,10 +6,12 @@ import { JsonLd } from "@/components/JsonLd";
 import { BookVisual } from "@/components/BookVisual";
 import { Chat, Compare, FieldDrill, Mistake, Points, SayThis, Science, Table, Truth } from "@/components/book/BookBlocks";
 import { categoryBySlug } from "@/content/categories";
-import { chapterById } from "@/content/book";
+import { ALL_CHAPTERS, chapterById } from "@/content/book";
+import { toolById, toolChapters } from "@/content/tools";
+import { ToolRunner, type ChapterInfo } from "@/components/tools/ToolRunner";
 import { autolinkTerms, postUrl, relatedPosts, type Post } from "@/lib/blog";
 import { renderMdx } from "@/lib/mdx";
-import { articleLd, faqLd } from "@/lib/seo";
+import { articleLd, faqLd, webAppLd } from "@/lib/seo";
 import { BOOK } from "@/lib/site";
 
 function formatDate(iso: string) {
@@ -48,7 +50,63 @@ function Callout({ title, children }: { title?: string; children: React.ReactNod
   );
 }
 
-const COMPONENTS = { SayThis, Truth, FieldDrill, Mistake, Science, Chat, Compare, Table, Points, BookCTA, Callout } as unknown as Record<
+/**
+ * A Pexels photo inside an article. Pexels' CDN does the resizing (srcset), so no image
+ * optimization runs on our side; width/height keep the layout from shifting.
+ */
+function Photo({ id, alt, credit, href, w = 1260, h = 840 }: { id: string; alt: string; credit: string; href: string; w?: number; h?: number }) {
+  const base = `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb`;
+  return (
+    <figure className="not-prose my-8">
+      {/* eslint-disable-next-line @next/next/no-img-element -- Pexels CDN serves the sizes; keeps Vercel image optimization out of the bill */}
+      <img
+        src={`${base}&w=960`}
+        srcSet={`${base}&w=640 640w, ${base}&w=960 960w, ${base}&w=1280 1280w`}
+        sizes="(max-width: 1024px) 92vw, 720px"
+        alt={alt}
+        width={w}
+        height={h}
+        loading="lazy"
+        decoding="async"
+        className="h-auto w-full rounded-[22px] bg-slab-2"
+      />
+      <figcaption className="mt-2 px-1 font-sans text-[0.78rem] text-ink-4">
+        Photo:{" "}
+        <a href={href} rel="nofollow noopener" target="_blank" className="underline hover:text-ink-2">
+          {credit}
+        </a>{" "}
+        on Pexels
+      </figcaption>
+    </figure>
+  );
+}
+
+function VerdictCard({ answer, points }: { answer: string; points: string[] }) {
+  return (
+    <section aria-label="The short answer" className="slab mt-8 p-5 sm:p-7">
+      <p className="eyebrow eyebrow-accent">The short answer</p>
+      <p className="mt-3 text-[1.12rem] font-semibold leading-snug text-ink sm:text-[1.2rem]">{answer}</p>
+      {points.length ? (
+        <ul className="mt-4 space-y-2">
+          {points.map((pt) => (
+            <li key={pt} className="flex gap-3 text-[0.98rem] leading-relaxed text-ink-2">
+              <span aria-hidden className="mt-[0.6em] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+              <span>{pt}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <div className="mt-5 flex flex-wrap gap-2">
+        <BuyButton size="md" />
+        <Link href="/book/sample" className="btn btn-ghost">
+          Read Part 1 free
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+const COMPONENTS = { SayThis, Truth, FieldDrill, Mistake, Science, Chat, Compare, Table, Points, BookCTA, Callout, Photo } as unknown as Record<
   string,
   ComponentType<Record<string, unknown>>
 >;
@@ -59,15 +117,28 @@ export async function ArticleView({ post, preview = false }: { post: Post; previ
   const body = await renderMdx(post.body, { format: post.format, components: COMPONENTS, autolink: autolinkTerms(), self: url });
   const related = relatedPosts(post, 3);
   const chapter = post.chapters[0];
+  const tool = toolById(post.tool);
+  const chapterMap: Record<string, ChapterInfo> = {};
+  if (tool) {
+    for (const id of toolChapters(tool)) {
+      const c = ALL_CHAPTERS.find((x) => x.id === id);
+      if (c) chapterMap[id] = { id: c.id, title: c.title, page: c.page };
+    }
+  }
 
   return (
     <>
-      {!preview ? <JsonLd data={[articleLd(post, url), ...(post.faq.length ? [faqLd(post.faq)] : [])]} /> : null}
+      {!preview ? (
+        <JsonLd
+          data={[articleLd(post, url), ...(tool ? [webAppLd(tool.name, post.description, url)] : []), ...(post.faq.length ? [faqLd(post.faq)] : [])]}
+        />
+      ) : null}
       <Container className="pt-10 sm:pt-14">
         {preview ? (
           <p className="tag tag-accent mb-4">Preview · {post.draft ? "draft" : `scheduled ${post.publishedAt}`} · not public</p>
         ) : null}
         <Breadcrumbs
+          compact={Boolean(tool)}
           items={[
             { name: "Guides", path: "/blog" },
             { name: cat.name, path: `/blog/${cat.slug}` },
@@ -80,9 +151,9 @@ export async function ArticleView({ post, preview = false }: { post: Post; previ
               <Link href={`/blog/${cat.slug}`} className="eyebrow eyebrow-accent hover:underline">
                 {cat.name}
               </Link>
-              <h1 className="display mt-4 text-[2.3rem] text-ink sm:text-[3.2rem]">{post.title}</h1>
-              {post.description ? <p className="dek mt-4 text-[1.2rem] leading-snug">{post.description}</p> : null}
-              <p className="mt-5 flex flex-wrap gap-x-4 gap-y-1 text-[0.86rem] text-ink-4">
+              <h1 className={`display text-ink ${tool ? "mt-3 text-[1.75rem] leading-[1.12] sm:text-[2.6rem]" : "mt-4 text-[2.3rem] sm:text-[3.2rem]"}`}>{post.title}</h1>
+              {post.description && !tool ? <p className="dek mt-4 text-[1.2rem] leading-snug">{post.description}</p> : null}
+              <p className={`flex flex-wrap gap-x-4 gap-y-1 text-[0.86rem] text-ink-4 ${tool ? "hidden" : "mt-5"}`}>
                 <span>
                   By <Link href="/about" className="text-ink-3 hover:text-ink">Still Gravity</Link>
                 </span>
@@ -98,7 +169,31 @@ export async function ArticleView({ post, preview = false }: { post: Post; previ
               </p>
             </header>
 
-            {post.image ? (
+            {tool ? (
+              <>
+                <div className="mt-5">
+                  <ToolRunner tool={tool} chapters={chapterMap} price={BOOK.priceLabel} />
+                </div>
+                {post.description ? <p className="dek mt-8 max-w-3xl text-[1.12rem] leading-snug">{post.description}</p> : null}
+                <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[0.86rem] text-ink-4">
+                  <span>
+                    By <Link href="/about" className="text-ink-3 hover:text-ink">Still Gravity</Link>
+                  </span>
+                  <span>
+                    Published <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
+                  </span>
+                  {post.updatedAt !== post.publishedAt ? (
+                    <span>
+                      Updated <time dateTime={post.updatedAt}>{formatDate(post.updatedAt)}</time>
+                    </span>
+                  ) : null}
+                </p>
+              </>
+            ) : null}
+
+            {post.verdict ? <VerdictCard answer={post.verdict.answer} points={post.verdict.points} /> : null}
+
+            {post.image && !tool && !post.verdict ? (
               <figure className="slab mt-8 overflow-hidden p-2">
                 <Image
                   src={post.image.src}

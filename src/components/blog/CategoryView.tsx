@@ -44,6 +44,16 @@ export function CategoryView({ cat, posts, page }: { cat: Category; posts: Post[
           <h1 className="display mt-4 text-[2.3rem] text-ink sm:text-[3.3rem]">{cat.title}</h1>
           <p className="mt-5 text-[1.1rem] leading-relaxed text-ink-3">{cat.intro}</p>
         </div>
+        {cat.guide?.length && page === 1 ? (
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            {cat.guide.map((g) => (
+              <section key={g.q} className="slab-inset p-5 sm:p-6">
+                <h2 className="text-[1.08rem] font-semibold leading-snug text-ink">{g.q}</h2>
+                <p className="mt-2 text-[0.97rem] leading-relaxed text-ink-3">{g.a}</p>
+              </section>
+            ))}
+          </div>
+        ) : null}
       </Container>
 
       <Section className="!pt-12">
