@@ -116,10 +116,17 @@ export function ConsentManager() {
         <p className="font-serif text-[1.08rem] font-semibold text-ink">
           {mode === "optin" ? "Can we count your visit?" : "A quick note on analytics"}
         </p>
-        <p className="mt-2 text-[0.92rem] leading-relaxed text-ink-3">
+        {/* Two short blocks rather than one long one: the banner appears after hydration, and a
+            single large text block here became the page's LCP element on mobile tool pages. */}
+        <p className="mt-2 text-[0.88rem] leading-relaxed text-ink-3">
           {mode === "optin"
-            ? "We’d like to use FlowGlance, our only analytics tool, to see which pages help. It records page activity, including text you submit in forms. Essential cookies for sign-in and checkout are always on."
-            : "We use FlowGlance, our only analytics tool, to see which pages help. It records page activity, including text you submit in forms. You can opt out any time."}{" "}
+            ? "We’d like to use FlowGlance, our only analytics tool, to see which pages help."
+            : "We use FlowGlance, our only analytics tool, to see which pages help."}
+        </p>
+        <p className="mt-1 text-[0.88rem] leading-relaxed text-ink-3">
+          {mode === "optin"
+            ? "It records page activity, including text you submit in forms. Essential cookies for sign-in and checkout are always on."
+            : "It records page activity, including text you submit in forms. You can opt out any time."}{" "}
           <Link href="/cookie-policy" className="underline underline-offset-4 hover:text-ink">
             Details
           </Link>
