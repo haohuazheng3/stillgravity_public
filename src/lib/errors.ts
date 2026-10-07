@@ -63,14 +63,29 @@ export function fingerprintOf(name: string, frame: string, route: string | null 
 const NOTIFY_EVERY_MS = 6 * 60 * 60 * 1000;
 
 /**
+ * React hydration mismatches reported by browsers (#418/#423/#425, "Hydration failed").
+ * React recovers by rendering on the client, and in the field they come from extensions,
+ * translation tools or outdated engines rewriting the DOM before hydration. They stay in
+ * the inbox as warnings instead of turning /api/health red; a real regression shows up
+ * in the CI/production smoke test, which loads pages in a current Chrome.
+ */
+const HYDRATION = /Minified React error #(418|423|425)\b|Hydration failed|error while hydrating|did not match the client/i;
+
+export function effectiveSeverity(source: ErrorSource, requested: Severity, message: string): Severity {
+  if (source === "client" && HYDRATION.test(message)) return "warn";
+  return requested;
+}
+
+/**
  * Record an error in the inbox. Never throws: if the database itself is down the
  * error is still logged to the platform logs (where /api/health will also go red).
  */
 export async function captureError(err: unknown, opts: CaptureOptions = {}): Promise<void> {
   const n = normalize(err);
   const source = opts.source ?? "server";
-  const severity = opts.severity ?? "error";
   const route = opts.route ?? null;
+  const severity = effectiveSeverity(source, opts.severity ?? "error", n.message);
+  const forcedWarn = severity === "warn" && (opts.severity ?? "error") === "error";
   const frame = firstFrame(n.stack);
   const fingerprint = fingerprintOf(n.name, frame, route, n.message);
   console.error(`[capture:${source}] ${n.name}: ${n.message}`, route ?? "", n.stack.split("\n").slice(0, 4).join(" | "));
@@ -100,7 +115,7 @@ export async function captureError(err: unknown, opts: CaptureOptions = {}): Pro
           context: opts.context ?? null,
           // A resolved error that comes back is a regression: reopen it.
           resolvedAt: null,
-          severity: sql`CASE WHEN ${errorGroups.severity} = 'error' THEN 'error' ELSE ${severity} END`,
+          severity: forcedWarn ? "warn" : sql`CASE WHEN ${errorGroups.severity} = 'error' THEN 'error' ELSE ${severity} END`,
         },
       })
       .returning({

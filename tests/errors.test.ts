@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fingerprintOf, firstFrame } from "@/lib/errors";
+import { effectiveSeverity, fingerprintOf, firstFrame } from "@/lib/errors";
 
 describe("error fingerprinting", () => {
   it("strips line/column numbers and build hashes so deploys don't split groups", () => {
@@ -16,5 +16,18 @@ describe("error fingerprinting", () => {
   it("falls back to the message when there is no stack", () => {
     expect(fingerprintOf("Error", "", "/a", "boom 1")).toBe(fingerprintOf("Error", "", "/a", "boom 2"));
     expect(fingerprintOf("Error", "", "/a", "boom")).not.toBe(fingerprintOf("Error", "", "/a", "other"));
+  });
+});
+
+describe("severity classification", () => {
+  const hydration = "Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message";
+  it("keeps browser hydration mismatches out of the severe bucket", () => {
+    expect(effectiveSeverity("client", "error", hydration)).toBe("warn");
+    expect(effectiveSeverity("client", "error", "Hydration failed because the server rendered HTML didn't match the client.")).toBe("warn");
+  });
+  it("leaves other client errors and all server errors alone", () => {
+    expect(effectiveSeverity("client", "error", "TypeError: x is undefined")).toBe("error");
+    expect(effectiveSeverity("server", "error", hydration)).toBe("error");
+    expect(effectiveSeverity("client", "warn", "anything")).toBe("warn");
   });
 });

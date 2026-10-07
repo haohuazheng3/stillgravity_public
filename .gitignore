@@ -31,3 +31,6 @@ npm-debug.log*
 
 # OS
 .DS_Store
+
+# Private credentials ledger: lives only on the owner's machine, never in any repo
+/account[.]md
