@@ -20,7 +20,8 @@ const COLS = [
       { href: "/blog", label: "All guides" },
       { href: "/blog/texting", label: "Texting" },
       { href: "/blog/signals", label: "Reading her signals" },
-      { href: "/blog/self-improvement", label: "Becoming the man" },
+      { href: "/blog/dates", label: "First dates" },
+      { href: "/blog/relationships", label: "Relationships" },
     ],
   },
   {

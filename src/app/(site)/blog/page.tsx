@@ -58,15 +58,27 @@ export default function BlogHub() {
       <Section className="!pt-14">
         <h2 className="eyebrow">Browse by topic</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {cats.map((c) => (
-            <Link key={c.slug} href={`/blog/${c.slug}`} className="slab slab-hover flex flex-col p-6">
-              <span className="flex items-center justify-between gap-3">
-                <span className="text-[1.15rem] font-semibold text-ink">{c.name}</span>
-                <span className={`tag ${c.count ? "tag-accent" : ""}`}>{c.count ? `${c.count} guide${c.count === 1 ? "" : "s"}` : "Soon"}</span>
-              </span>
-              <span className="mt-3 text-[0.94rem] leading-relaxed text-ink-3">{c.description}</span>
-            </Link>
-          ))}
+          {cats.map((c) => {
+            const inner = (
+              <>
+                <span className="flex items-center justify-between gap-3">
+                  <span className="text-[1.15rem] font-semibold text-ink">{c.name}</span>
+                  <span className={`tag ${c.count ? "tag-accent" : ""}`}>{c.count ? `${c.count} guide${c.count === 1 ? "" : "s"}` : "Soon"}</span>
+                </span>
+                <span className="mt-3 text-[0.94rem] leading-relaxed text-ink-3">{c.description}</span>
+              </>
+            );
+            // Empty topics stay visible as "Soon" but aren't links: their hub pages are noindex.
+            return c.count ? (
+              <Link key={c.slug} href={`/blog/${c.slug}`} className="slab slab-hover flex flex-col p-6">
+                {inner}
+              </Link>
+            ) : (
+              <div key={c.slug} className="slab flex flex-col p-6 opacity-75">
+                {inner}
+              </div>
+            );
+          })}
         </div>
       </Section>
 
