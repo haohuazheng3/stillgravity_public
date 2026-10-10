@@ -480,6 +480,13 @@ function GeneratorView({ tool, chapters, price }: { tool: GeneratorTool } & Shar
         <span className="text-[0.82rem] text-ink-4">{pool.length} in this set</span>
       </div>
       <p className="mt-4 text-[0.9rem] leading-relaxed text-ink-3">{tool.note}</p>
+      {tool.next ? (
+        <p className="mt-3 text-[0.95rem] font-semibold">
+          <Link href={tool.next.href} className="text-accent-text underline-offset-4 hover:underline" onClick={() => track("tool_next", { tool: tool.id, to: tool.next!.href })}>
+            Next: {tool.next.label} →
+          </Link>
+        </p>
+      ) : null}
       {ch ? <ChapterCard toolId={tool.id} chapter={ch} price={price} /> : null}
     </div>
   );

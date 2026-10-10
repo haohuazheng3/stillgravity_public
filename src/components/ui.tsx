@@ -125,7 +125,9 @@ export function TrustLine({ className = "" }: { className?: string }) {
   );
 }
 
-export function CtaSlab({ title, body }: { title?: ReactNode; body?: ReactNode }) {
+/** `secondary` replaces the "Read Part 1 free" link, e.g. on the sample page itself. */
+export function CtaSlab({ title, body, secondary }: { title?: ReactNode; body?: ReactNode; secondary?: { href: string; label: string } }) {
+  const alt = secondary ?? { href: "/book/sample", label: "Read Part 1 free" };
   return (
     <div className="slab-ink overflow-hidden px-6 py-12 text-center sm:px-12 sm:py-16">
       <p className="font-sans text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#f0b752]">{BOOK.displayTitle}</p>
@@ -142,8 +144,8 @@ export function CtaSlab({ title, body }: { title?: ReactNode; body?: ReactNode }
       </p>
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <BuyButton />
-        <Link href="/book/sample" className="btn btn-lg !bg-white/10 !text-[#edf0f6] hover:!bg-white/15">
-          Read Part 1 free
+        <Link href={alt.href} className="btn btn-lg !bg-white/10 !text-[#edf0f6] hover:!bg-white/15">
+          {alt.label}
         </Link>
       </div>
       <p className="mt-6 text-[0.82rem] text-[#8f9bb0]">No pickup lines. No mind games. {BOOK.refundDays}-day refund, no questions asked.</p>

@@ -90,7 +90,7 @@ export default function SamplePage() {
         </div>
       </Container>
       <Section>
-        <CtaSlab title={<>Part 1 is the foundation. <em className="!text-[#f0b752]">The rest is the field manual.</em></>} />
+        <CtaSlab title={<>Part 1 is the foundation. <em className="!text-[#f0b752]">The rest is the field manual.</em></>} secondary={{ href: "/situations", label: "Find your situation" }} />
       </Section>
     </>
   );

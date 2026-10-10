@@ -136,6 +136,8 @@ export interface GeneratorTool {
   copyable: boolean;
   /** Shown under the list. */
   note: string;
+  /** The obvious next step after using the tool (e.g. picked prompts → write the answers). */
+  next?: { href: string; label: string };
   chapter: string;
 }
 
