@@ -1,0 +1,26 @@
+/**
+ * The free tools people find most (GSC, 2026-10-11 round), linked from the home page and the
+ * guides index with the words people search for. Order = priority.
+ */
+export const POPULAR_TOOLS: { path: string; label: string }[] = [
+  { path: "/blog/texting/flirty-texts-for-her", label: "Flirty texts for her" },
+  { path: "/blog/approaching/dating-profile-examples", label: "Dating profile examples for men" },
+  { path: "/blog/approaching/hinge-vs-bumble", label: "Hinge vs Bumble for men" },
+  { path: "/blog/dates/fall-date-ideas", label: "Fall date ideas" },
+  { path: "/blog/relationships/would-you-rather-questions-for-couples", label: "Would you rather questions for couples" },
+  { path: "/blog/approaching/bumble-bio-for-guys", label: "Bumble bio for guys" },
+  { path: "/blog/approaching/hinge-prompt-answers", label: "Hinge prompt answers" },
+  { path: "/blog/approaching/tinder-vs-bumble", label: "Tinder vs Bumble" },
+  { path: "/blog/attraction/how-attractive-am-i", label: "How attractive am I? quiz" },
+  { path: "/blog/relationships/when-to-propose", label: "When to propose" },
+  { path: "/blog/approaching/are-dating-apps-worth-it", label: "Are dating apps worth it?" },
+  { path: "/blog/approaching/hinge-openers", label: "Hinge openers" },
+  { path: "/blog/relationships/am-i-the-problem", label: "Am I the toxic one? quiz" },
+  { path: "/blog/approaching/hinge-prompts-for-guys", label: "Best Hinge prompts for guys" },
+  { path: "/blog/approaching/tinder-openers", label: "Tinder openers" },
+  { path: "/blog/dates/half-your-age-plus-seven", label: "Dating age calculator" },
+  { path: "/blog/relationships/date-night-ideas", label: "Date night ideas" },
+  { path: "/blog/dates/first-date-ideas", label: "First date ideas" },
+  { path: "/blog/signals/should-i-ask-her-out", label: "Should I ask her out? quiz" },
+  { path: "/blog/rejection/how-long-to-get-over-a-breakup", label: "Breakup recovery calculator" },
+];

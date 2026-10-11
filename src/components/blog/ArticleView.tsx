@@ -9,6 +9,7 @@ import { categoryBySlug } from "@/content/categories";
 import { ALL_CHAPTERS, chapterById } from "@/content/book";
 import { toolById, toolChapters } from "@/content/tools";
 import { ToolRunner, type ChapterInfo } from "@/components/tools/ToolRunner";
+import { CATALOG_ID, ToolCatalog } from "@/components/tools/ToolCatalog";
 import { autolinkTerms, postUrl, relatedPosts, type Post } from "@/lib/blog";
 import { renderMdx } from "@/lib/mdx";
 import { articleLd, faqLd, webAppLd } from "@/lib/seo";
@@ -118,6 +119,8 @@ export async function ArticleView({ post, preview = false }: { post: Post; previ
   const related = relatedPosts(post, 3);
   const chapter = post.chapters[0];
   const tool = toolById(post.tool);
+  const catalog = tool?.kind === "generator" && tool.catalog ? tool : null;
+  const toc = catalog ? [{ id: CATALOG_ID, text: catalog.catalog!.title }, ...post.headings] : post.headings;
   const chapterMap: Record<string, ChapterInfo> = {};
   if (tool) {
     for (const id of toolChapters(tool)) {
@@ -219,11 +222,11 @@ export async function ArticleView({ post, preview = false }: { post: Post; previ
               </figure>
             ) : null}
 
-            {post.headings.length >= 3 ? (
+            {toc.length >= 3 ? (
               <nav aria-label="On this page" className="slab-inset mt-8 p-5 lg:hidden">
                 <p className="eyebrow">On this page</p>
                 <ol className="mt-2 space-y-1 text-[0.95rem]">
-                  {post.headings.map((h) => (
+                  {toc.map((h) => (
                     <li key={h.id}>
                       <a href={`#${h.id}`} className="text-ink-3 hover:text-ink">
                         {h.text}
@@ -233,6 +236,8 @@ export async function ArticleView({ post, preview = false }: { post: Post; previ
                 </ol>
               </nav>
             ) : null}
+
+            {catalog ? <ToolCatalog tool={catalog} /> : null}
 
             <div className="slab mt-8 px-5 py-8 sm:px-10 sm:py-12">
               <div className="prose-sg">{body}</div>
@@ -268,11 +273,11 @@ export async function ArticleView({ post, preview = false }: { post: Post; previ
 
           <aside className="hidden lg:block">
             <div className="sticky top-28 space-y-4">
-              {post.headings.length >= 3 ? (
+              {toc.length >= 3 ? (
                 <nav aria-label="On this page" className="slab p-5">
                   <p className="eyebrow">On this page</p>
                   <ol className="mt-3 space-y-1.5 text-[0.9rem]">
-                    {post.headings.map((h) => (
+                    {toc.map((h) => (
                       <li key={h.id}>
                         <a href={`#${h.id}`} className="block rounded-lg px-2 py-1 text-ink-3 hover:bg-slab-2 hover:text-ink">
                           {h.text}

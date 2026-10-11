@@ -9,6 +9,12 @@
 
 export type Tone = "good" | "mixed" | "low" | "stop";
 
+/** The obvious next step after a tool (e.g. picked prompts → write the answers). */
+export interface ToolNext {
+  href: string;
+  label: string;
+}
+
 export interface ToolResult {
   id: string;
   /** The verdict in a few words: "She's interested." */
@@ -22,6 +28,8 @@ export interface ToolResult {
   /** Book chapter with the full playbook, e.g. "5.1". */
   chapter: string;
   tone: Tone;
+  /** Overrides the tool's next step for this result. */
+  next?: ToolNext;
 }
 
 export interface QuizOption {
@@ -64,6 +72,7 @@ export interface QuizTool {
   results: ToolResult[];
   /** How the score works, shown under the result. */
   method: string;
+  next?: ToolNext;
 }
 
 export interface DecisionNode {
@@ -83,6 +92,7 @@ export interface DecisionTool {
   nodes: DecisionNode[];
   results: ToolResult[];
   method: string;
+  next?: ToolNext;
 }
 
 export interface CalcInput {
@@ -113,6 +123,7 @@ export interface CalculatorTool {
   /** Results the formula can point to (by id), each with the honest framing. */
   results: ToolResult[];
   method: string;
+  next?: ToolNext;
 }
 
 export interface GeneratorItem {
@@ -121,6 +132,22 @@ export interface GeneratorItem {
   tags: string[];
   /** Why it works, one short line. */
   why?: string;
+  /** Catalog group id (see GeneratorTool.catalog). */
+  group?: string;
+}
+
+/**
+ * The full list, rendered on the server below the tool: grouped by the moments people
+ * search for, so every item is readable (and indexable) without using the tool.
+ */
+export interface GeneratorCatalog {
+  /** Section heading, e.g. "All 80 flirty texts, by moment". */
+  title: string;
+  intro?: string;
+  /** Group by an existing filter's values instead of item.group. */
+  groupBy?: string;
+  /** heading = the searched phrase (H3); label = the short jump-chip text. */
+  groups: { id: string; heading: string; label?: string; intro?: string }[];
 }
 
 export interface GeneratorTool {
@@ -136,8 +163,8 @@ export interface GeneratorTool {
   copyable: boolean;
   /** Shown under the list. */
   note: string;
-  /** The obvious next step after using the tool (e.g. picked prompts → write the answers). */
-  next?: { href: string; label: string };
+  next?: ToolNext;
+  catalog?: GeneratorCatalog;
   chapter: string;
 }
 
@@ -163,6 +190,7 @@ export interface CheckerTool {
   bands: { min: number; max: number; result: string }[];
   results: ToolResult[];
   method: string;
+  next?: ToolNext;
 }
 
 export type Tool = QuizTool | DecisionTool | CalculatorTool | GeneratorTool | CheckerTool;

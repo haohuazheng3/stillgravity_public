@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Breadcrumbs, Container, CtaSlab, Section } from "@/components/ui";
 import { categoriesWithCounts, postUrl, publishedPosts } from "@/lib/blog";
+import { PopularTools } from "@/components/PopularTools";
 import { categoryBySlug } from "@/content/categories";
 import { pageMetadata } from "@/lib/seo";
 
@@ -39,6 +40,11 @@ export default function BlogHub() {
           </p>
         </div>
       </Container>
+
+      <Section className="!pt-14">
+        <h2 className="eyebrow">Most-used free tools</h2>
+        <PopularTools className="mt-4" />
+      </Section>
 
       {featured.length ? (
         <Section className="!pt-14">

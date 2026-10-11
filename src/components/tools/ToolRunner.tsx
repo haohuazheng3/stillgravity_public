@@ -10,6 +10,7 @@ import type {
   GeneratorItem,
   GeneratorTool,
   QuizTool,
+  ToolNext,
   Tone,
   Tool,
   ToolResult,
@@ -58,7 +59,17 @@ function useStartOnce(id: string) {
   };
 }
 
-function CopyButton({ text, toolId }: { text: string; toolId: string }) {
+function NextStep({ toolId, next }: { toolId: string; next: ToolNext }) {
+  return (
+    <p className="mt-4 text-[0.95rem] font-semibold">
+      <Link href={next.href} className="text-accent-text underline-offset-4 hover:underline" onClick={() => track("tool_next", { tool: toolId, to: next.href })}>
+        Next: {next.label} →
+      </Link>
+    </p>
+  );
+}
+
+export function CopyButton({ text, toolId }: { text: string; toolId: string }) {
   const [done, setDone] = useState(false);
   return (
     <button
@@ -107,15 +118,18 @@ function ResultCard({
   restartLabel = "Start over",
   children,
   method,
+  next,
 }: {
   toolId: string;
   result: ToolResult;
+  next?: ToolNext;
   onRestart: () => void;
   restartLabel?: string;
   children?: ReactNode;
   method?: string;
 } & Shared) {
   const ch = chapters[result.chapter];
+  const step = result.next ?? next;
   const tone = TONE[result.tone];
   return (
     <div aria-live="polite" className={`slab-inset relative overflow-hidden px-5 py-5 sm:px-6 before:absolute before:inset-y-4 before:left-0 before:w-[3px] before:rounded-r-full ${tone.ring}`}>
@@ -131,6 +145,7 @@ function ResultCard({
           <CopyButton text={result.say} toolId={toolId} />
         </div>
       ) : null}
+      {step ? <NextStep toolId={toolId} next={step} /> : null}
       {ch ? <ChapterCard toolId={toolId} chapter={ch} price={price} result={result.id} /> : null}
       {method ? (
         <details className="mt-4 text-[0.88rem] text-ink-3">
@@ -212,6 +227,7 @@ function QuizView({ tool, ...shared }: { tool: QuizTool } & Shared) {
       <ResultCard
         toolId={tool.id}
         result={result}
+        next={tool.next}
         method={tool.method}
         onRestart={() => {
           setAnswers([]);
@@ -265,6 +281,7 @@ function DecisionView({ tool, ...shared }: { tool: DecisionTool } & Shared) {
       <ResultCard
         toolId={tool.id}
         result={result}
+        next={tool.next}
         method={tool.method}
         onRestart={() => {
           setPath([tool.start]);
@@ -372,7 +389,7 @@ function CalculatorView({ tool, ...shared }: { tool: CalculatorTool } & Shared) 
       </form>
       {shown && result ? (
         <div className="mt-5">
-          <ResultCard toolId={tool.id} result={result} method={tool.method} onRestart={() => { setValues(initial); setShown(false); }} {...shared}>
+          <ResultCard toolId={tool.id} result={result} next={tool.next} method={tool.method} onRestart={() => { setValues(initial); setShown(false); }} {...shared}>
             {out.lines.length ? (
               <dl className="mt-4 grid gap-2 sm:grid-cols-2">
                 {out.lines.map((l) => (
@@ -480,13 +497,7 @@ function GeneratorView({ tool, chapters, price }: { tool: GeneratorTool } & Shar
         <span className="text-[0.82rem] text-ink-4">{pool.length} in this set</span>
       </div>
       <p className="mt-4 text-[0.9rem] leading-relaxed text-ink-3">{tool.note}</p>
-      {tool.next ? (
-        <p className="mt-3 text-[0.95rem] font-semibold">
-          <Link href={tool.next.href} className="text-accent-text underline-offset-4 hover:underline" onClick={() => track("tool_next", { tool: tool.id, to: tool.next!.href })}>
-            Next: {tool.next.label} →
-          </Link>
-        </p>
-      ) : null}
+      {tool.next ? <NextStep toolId={tool.id} next={tool.next} /> : null}
       {ch ? <ChapterCard toolId={tool.id} chapter={ch} price={price} /> : null}
     </div>
   );
@@ -552,7 +563,7 @@ function CheckerView({ tool, ...shared }: { tool: CheckerTool } & Shared) {
       </button>
       {report ? (
         <div className="mt-5">
-          <ResultCard toolId={tool.id} result={report.result} method={tool.method} restartLabel="Edit and check again" onRestart={() => setChecked(null)} {...shared}>
+          <ResultCard toolId={tool.id} result={report.result} next={tool.next} method={tool.method} restartLabel="Edit and check again" onRestart={() => setChecked(null)} {...shared}>
             <p className="condensed mt-3 text-[2rem] font-semibold text-ink">
               {report.score}
               <span className="text-[1rem] text-ink-4">/100</span>

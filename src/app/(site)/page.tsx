@@ -11,6 +11,7 @@ import { BOOK, SITE } from "@/lib/site";
 import { faqLd, organizationLd, pageMetadata, websiteLd } from "@/lib/seo";
 import { publishedPosts, postUrl } from "@/lib/blog";
 import { categoryBySlug } from "@/content/categories";
+import { PopularTools } from "@/components/PopularTools";
 
 export const metadata: Metadata = pageMetadata({
   title: `${SITE.name} — Attraction isn’t a trick. It’s gravity.`,
@@ -162,6 +163,8 @@ export default function HomePage() {
       {posts.length > 0 ? (
         <Section>
           <SectionHead eyebrow="Field guides" title="Free guides for the specific moment" />
+          <h3 className="eyebrow mb-3">Free tools men use most</h3>
+          <PopularTools className="mb-8" />
           <div className="grid gap-4 md:grid-cols-3">
             {posts.map((p) => (
               <Link key={postUrl(p)} href={postUrl(p)} className="slab slab-hover flex flex-col p-6">

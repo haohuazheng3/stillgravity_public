@@ -18,6 +18,9 @@ export async function generateMetadata(props: PageProps<"/blog/[category]/[slug]
   if (!post) return {};
   const meta = pageMetadata({
     title: post.title,
+    // Google shows the site name above every result already; the brand suffix only pushed
+    // titles past the ~60-character cut-off and hid the part people scan.
+    absoluteTitle: true,
     description: post.description,
     path: postUrl(post),
     type: "article",
