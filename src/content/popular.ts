@@ -9,6 +9,8 @@ export const POPULAR_TOOLS: { path: string; label: string }[] = [
   { path: "/blog/approaching/tinder-bio-for-guys", label: "Tinder bio for guys" },
   { path: "/blog/rejection/no-contact-rule", label: "No contact rule" },
   { path: "/blog/rejection/should-i-get-back-with-my-ex", label: "Should I get back with my ex?" },
+  { path: "/blog/relationships/questions-to-ask-your-girlfriend", label: "Questions to ask your girlfriend" },
+  { path: "/blog/talking-stage/when-to-say-i-love-you", label: "When to say I love you" },
   { path: "/blog/texting/flirty-texts-for-her", label: "Flirty texts for her" },
   { path: "/blog/approaching/dating-profile-examples", label: "Dating profile examples for men" },
   { path: "/blog/approaching/hinge-vs-bumble", label: "Hinge vs Bumble for men" },
