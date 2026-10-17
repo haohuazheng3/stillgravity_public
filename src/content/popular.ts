@@ -3,6 +3,9 @@
  * guides index with the words people search for. Order = priority.
  */
 export const POPULAR_TOOLS: { path: string; label: string }[] = [
+  { path: "/blog/approaching/how-to-get-a-girlfriend", label: "How to get a girlfriend" },
+  { path: "/blog/signals/signs-she-likes-you", label: "Signs she likes you" },
+  { path: "/blog/texting/how-to-text-women", label: "How to text women" },
   { path: "/blog/texting/flirty-texts-for-her", label: "Flirty texts for her" },
   { path: "/blog/approaching/dating-profile-examples", label: "Dating profile examples for men" },
   { path: "/blog/approaching/hinge-vs-bumble", label: "Hinge vs Bumble for men" },
