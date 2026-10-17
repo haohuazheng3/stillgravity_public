@@ -3,11 +3,13 @@ import Image from "next/image";
 import type { ComponentType } from "react";
 import { Breadcrumbs, BuyButton, Container, FaqList } from "@/components/ui";
 import { JsonLd } from "@/components/JsonLd";
+import { LeadForm } from "@/components/LeadForm";
 import { BookVisual } from "@/components/BookVisual";
 import { Chat, Compare, FieldDrill, Mistake, Points, SayThis, Science, Table, Truth } from "@/components/book/BookBlocks";
 import { categoryBySlug } from "@/content/categories";
 import { ALL_CHAPTERS, chapterById } from "@/content/book";
 import { toolById, toolChapters } from "@/content/tools";
+import { chapterTeaser } from "@/content/book-teasers";
 import { ToolRunner, type ChapterInfo } from "@/components/tools/ToolRunner";
 import { CATALOG_ID, ToolCatalog } from "@/components/tools/ToolCatalog";
 import { autolinkTerms, postUrl, relatedPosts, type Post } from "@/lib/blog";
@@ -21,6 +23,7 @@ function formatDate(iso: string) {
 
 function BookCTA({ chapter }: { chapter?: string }) {
   const ch = chapter ? chapterById(chapter) : null;
+  const teaser = ch ? chapterTeaser(ch.id) : undefined;
   return (
     <aside className="slab-ink not-prose my-8 flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:p-7">
       <div className="w-24 shrink-0">
@@ -33,7 +36,12 @@ function BookCTA({ chapter }: { chapter?: string }) {
         <p className="mt-2 text-[1.05rem] font-semibold text-[#edf0f6]">
           {ch ? ch.title : "The full playbook: 83 one-page chapters"}
         </p>
-        <p className="mt-1 text-[0.92rem] text-[#aeb8c8]">Exact words, the weak version beside the good one, and the research behind it.</p>
+        {teaser ? (
+          <blockquote className="mt-2 border-l-2 border-[#f0b752]/60 pl-3 font-serif text-[0.98rem] italic leading-relaxed text-[#d7dce5]">{teaser}</blockquote>
+        ) : null}
+        <p className="mt-2 text-[0.92rem] text-[#aeb8c8]">
+          {teaser ? `That’s how the chapter opens. The rest has the exact words, the weak version beside the good one, and the research behind it.` : "Exact words, the weak version beside the good one, and the research behind it."}
+        </p>
         <Link href="/book" className="mt-3 inline-flex min-h-[44px] items-center gap-2 text-[0.95rem] font-semibold text-[#f0b752] hover:text-[#f5c76a]">
           See the book · {BOOK.priceLabel} <span aria-hidden>→</span>
         </Link>
@@ -125,7 +133,7 @@ export async function ArticleView({ post, preview = false }: { post: Post; previ
   if (tool) {
     for (const id of toolChapters(tool)) {
       const c = ALL_CHAPTERS.find((x) => x.id === id);
-      if (c) chapterMap[id] = { id: c.id, title: c.title, page: c.page };
+      if (c) chapterMap[id] = { id: c.id, title: c.title, page: c.page, teaser: chapterTeaser(c.id) };
     }
   }
 
@@ -253,6 +261,21 @@ export async function ArticleView({ post, preview = false }: { post: Post; previ
             ) : null}
 
             <BookCTA chapter={chapter} />
+
+            {!preview ? (
+              <section aria-labelledby="part-1-free" className="slab mt-8 p-6 sm:p-8">
+                <p className="eyebrow eyebrow-accent">Free · 8 chapters</p>
+                <h2 id="part-1-free" className="headline mt-2 text-[1.45rem] leading-snug text-ink sm:text-[1.6rem]">
+                  Not ready to buy? Get Part 1 free.
+                </h2>
+                <p className="mt-2 max-w-2xl text-[0.98rem] leading-relaxed text-ink-3">
+                  The first eight chapters of {BOOK.displayTitle} as a PDF, with the full contents and the Situation Finder, so you can see which page handles what you’re facing.
+                </p>
+                <div className="mt-5 max-w-xl">
+                  <LeadForm source={url} chapter={chapter} />
+                </div>
+              </section>
+            ) : null}
 
             {related.length ? (
               <section className="mt-10" aria-labelledby="related">

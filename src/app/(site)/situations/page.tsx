@@ -6,6 +6,10 @@ import { ALL_CHAPTERS, chapterById } from "@/content/book";
 import { SITUATION_GROUPS } from "@/content/situations";
 import { pageMetadata } from "@/lib/seo";
 import { BOOK } from "@/lib/site";
+import { chapterTeaser } from "@/content/book-teasers";
+
+const SITUATION_CHAPTERS = new Set(SITUATION_GROUPS.flatMap((g) => g.items.map((s) => s.chapter)));
+
 
 export const metadata: Metadata = pageMetadata({
   title: "The Situation Finder: 36 dating situations and the honest first move",
@@ -15,7 +19,7 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default function SituationsPage() {
-  const chapters: Record<string, ChapterInfo> = Object.fromEntries(ALL_CHAPTERS.map((c) => [c.id, { id: c.id, title: c.title, page: c.page }]));
+  const chapters: Record<string, ChapterInfo> = Object.fromEntries(ALL_CHAPTERS.map((c) => [c.id, { id: c.id, title: c.title, page: c.page, ...(SITUATION_CHAPTERS.has(c.id) ? { teaser: chapterTeaser(c.id) } : {}) }]));
   return (
     <>
       <Container className="pt-10 sm:pt-14">

@@ -21,6 +21,8 @@ export interface MailInput {
   attachments?: MailAttachment[];
   /** Resend drops a repeat of the same key for 24 hours: a second guard against double sends. */
   idempotencyKey?: string;
+  /** Extra headers, e.g. List-Unsubscribe on list mail. */
+  headers?: Record<string, string>;
 }
 
 export async function sendEmail(m: MailInput): Promise<{ id: string }> {
@@ -38,6 +40,7 @@ export async function sendEmail(m: MailInput): Promise<{ id: string }> {
       subject: m.subject,
       text: m.text,
       html: m.html,
+      ...(m.headers ? { headers: m.headers } : {}),
       attachments: m.attachments?.map((a) => ({
         filename: a.filename,
         content: Buffer.from(a.content).toString("base64"),

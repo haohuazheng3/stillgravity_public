@@ -17,7 +17,7 @@ import type {
 } from "@/content/tools/types";
 import { FORMULAS } from "./formulas";
 
-export type ChapterInfo = { id: string; title: string; page: number };
+export type ChapterInfo = { id: string; title: string; page: number; teaser?: string };
 
 type Shared = { chapters: Record<string, ChapterInfo>; price: string };
 
@@ -96,7 +96,14 @@ function ChapterCard({ toolId, chapter: ch, price, result }: { toolId: string; c
     <div className="slab-ink mt-5 px-5 py-4 font-sans">
       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#f0b752]">The full playbook · chapter {ch.id}</p>
       <p className="mt-1.5 text-[1.02rem] font-semibold text-[#edf0f6]">{ch.title}</p>
-      <p className="mt-1 text-[0.9rem] text-[#aeb8c8]">Page {ch.page} of What She Won’t Tell You: the exact words, the weak version beside the good one, and why it works.</p>
+      {ch.teaser ? (
+        <blockquote className="mt-2 border-l-2 border-[#f0b752]/60 pl-3 font-serif text-[0.98rem] italic leading-relaxed text-[#d7dce5]">
+          {ch.teaser}
+        </blockquote>
+      ) : null}
+      <p className="mt-2 text-[0.9rem] text-[#aeb8c8]">
+        {ch.teaser ? `That’s how page ${ch.page} opens. The rest of the chapter has` : `Page ${ch.page} of What She Won’t Tell You:`} the exact words, the weak version beside the good one, and why it works.
+      </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Link href="/book" className="btn btn-primary btn-sm" onClick={() => track("tool_cta", { tool: toolId, to: "book", result })}>
           Get the book · {price}

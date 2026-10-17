@@ -9,6 +9,8 @@ export interface ChapterInfo {
   id: string;
   title: string;
   page: number;
+  /** How the chapter opens, verbatim (only sent for the chapters situations point to). */
+  teaser?: string;
 }
 
 /**
@@ -108,7 +110,10 @@ export function SituationFinder({
             <p className="mt-1 font-sans text-[0.98rem] font-semibold text-[#edf0f6]">
               Chapter {ch.id}: {ch.title}
             </p>
-            <p className="font-sans text-[0.82rem] text-[#8f9bb0]">Page {ch.page} · exact words, the weak version beside the good one</p>
+            {ch.teaser ? (
+              <blockquote className="mt-2 border-l-2 border-[#f0b752]/60 pl-3 font-serif text-[0.95rem] italic leading-relaxed text-[#d7dce5]">{ch.teaser}</blockquote>
+            ) : null}
+            <p className="mt-2 font-sans text-[0.82rem] text-[#8f9bb0]">Page {ch.page} · exact words, the weak version beside the good one</p>
           </div>
         ) : null}
         <div className="mt-6 flex flex-wrap gap-2.5">

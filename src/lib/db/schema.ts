@@ -161,6 +161,29 @@ export const contactMessages = pgTable(
   (t) => [index("contact_messages_created_idx").on(t.createdAt)],
 );
 
+/**
+ * People who asked for Part 1 by email (src/lib/leads.ts). id = `l_` + sha256(normalised email),
+ * so a repeat sign-up is the same row. Follow-ups go out only with `updates` = 1 (opted in) and
+ * a postal address configured (commercial email needs one); `step` counts emails sent.
+ */
+export const leads = pgTable(
+  "leads",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    source: text("source"),
+    chapter: text("chapter"),
+    updates: integer("updates").notNull().default(0),
+    step: integer("step").notNull().default(0),
+    nextSendAt: timestamp("next_send_at", { withTimezone: true }),
+    unsubscribedAt: timestamp("unsubscribed_at", { withTimezone: true }),
+    token: text("token").notNull(),
+    ipHash: text("ip_hash"),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("leads_token_uq").on(t.token), index("leads_next_send_idx").on(t.nextSendAt)],
+);
+
 /** Test inbox: mail routed by Cloudflare Email Routing → Email Worker → /api/inbox/ingest. */
 export const inboxMessages = pgTable(
   "inbox_messages",

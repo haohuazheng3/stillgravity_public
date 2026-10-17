@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LeadForm } from "@/components/LeadForm";
 import type { Metadata } from "next";
 import { Breadcrumbs, BuyButton, Container, CtaSlab, Section, TrustLine } from "@/components/ui";
 import { SAMPLE_CHAPTERS, SampleChapters } from "@/content/sample";
@@ -62,6 +63,17 @@ export default function SamplePage() {
                 </Link>
               </div>
             </div>
+
+            <section aria-labelledby="part-1-pdf" className="slab mt-6 px-6 py-7 sm:px-10">
+              <p className="eyebrow eyebrow-accent">Take it with you</p>
+              <h2 id="part-1-pdf" className="headline mt-2 text-[1.4rem] text-ink">Want Part 1 as a PDF?</h2>
+              <p className="mt-2 max-w-xl text-[0.98rem] leading-relaxed text-ink-3">
+                We’ll email these eight chapters, plus the full contents and the Situation Finder pages from the book, so you can see which page handles what you’re facing.
+              </p>
+              <div className="mt-5 max-w-xl">
+                <LeadForm source="/book/sample" />
+              </div>
+            </section>
           </div>
 
           <aside className="hidden lg:block">

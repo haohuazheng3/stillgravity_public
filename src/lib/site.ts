@@ -44,6 +44,6 @@ export const BOOK = {
 export const PRODUCT_ID = BOOK.sku;
 
 /** Pages that must never be indexed or listed in the sitemap. */
-export const PRIVATE_PATHS = ["/checkout", "/download", "/admin", "/sign-in", "/api/"] as const;
+export const PRIVATE_PATHS = ["/checkout", "/download", "/admin", "/sign-in", "/api/", "/unsubscribed"] as const;
 
 export const CONTENT_UPDATED = "2026-10-03";

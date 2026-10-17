@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { and, count, desc, eq, isNull, sql, sum } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { appState, contactMessages, downloads, entitlements, errorGroups, inboxMessages, orders, users } from "@/lib/db/schema";
+import { appState, contactMessages, downloads, entitlements, errorGroups, inboxMessages, leads, orders, users } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/admin";
 import { stripeMode } from "@/lib/stripe";
 import { missingEnv } from "@/lib/env";
@@ -15,7 +15,7 @@ function money(cents: number) {
 
 export default async function AdminOverview() {
   await requireAdmin();
-  const [u, paid, revenue, ents, errs, msgs, inbox, dls, recent, last] = await Promise.all([
+  const [u, paid, revenue, ents, errs, msgs, inbox, dls, recent, last, lds] = await Promise.all([
     db.select({ n: count() }).from(users),
     db.select({ n: count() }).from(orders).where(eq(orders.status, "paid")),
     db.select({ s: sum(orders.amountTotal) }).from(orders).where(eq(orders.status, "paid")),
@@ -26,6 +26,9 @@ export default async function AdminOverview() {
     db.select({ n: count() }).from(downloads).where(sql`${downloads.createdAt} > now() - interval '7 days'`),
     db.select().from(orders).orderBy(desc(orders.createdAt)).limit(8),
     db.select().from(appState).where(eq(appState.key, "reconcile:last")).limit(1),
+    db
+      .select({ n: count(), opted: sql<number>`count(*) filter (where ${leads.updates} = 1 and ${leads.unsubscribedAt} is null)` })
+      .from(leads),
   ]);
   const missing = missingEnv();
   const stats = [
@@ -37,6 +40,7 @@ export default async function AdminOverview() {
     ["New messages", msgs[0]?.n ?? 0, "/admin/messages"],
     ["Test inbox", inbox[0]?.n ?? 0, "/admin/inbox"],
     ["Downloads (7d)", dls[0]?.n ?? 0, null],
+    ["Part 1 sign-ups", `${lds[0]?.n ?? 0} (${Number(lds[0]?.opted ?? 0)} opted in)`, null],
   ] as const;
   const rec = last[0]?.value as { ranAt?: string; repaired?: unknown[]; failed?: unknown[] } | undefined;
 

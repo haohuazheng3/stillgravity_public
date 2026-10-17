@@ -12,6 +12,11 @@ import { faqLd, organizationLd, pageMetadata, websiteLd } from "@/lib/seo";
 import { publishedPosts, postUrl } from "@/lib/blog";
 import { categoryBySlug } from "@/content/categories";
 import { PopularTools } from "@/components/PopularTools";
+import { chapterTeaser } from "@/content/book-teasers";
+import { SITUATION_GROUPS } from "@/content/situations";
+
+const SITUATION_CHAPTERS = new Set(SITUATION_GROUPS.flatMap((g) => g.items.map((s) => s.chapter)));
+
 
 export const metadata: Metadata = pageMetadata({
   title: `${SITE.name} — Attraction isn’t a trick. It’s gravity.`,
@@ -33,7 +38,7 @@ const TRUTHS = [
 ];
 
 export default function HomePage() {
-  const chapters: Record<string, ChapterInfo> = Object.fromEntries(ALL_CHAPTERS.map((c) => [c.id, { id: c.id, title: c.title, page: c.page }]));
+  const chapters: Record<string, ChapterInfo> = Object.fromEntries(ALL_CHAPTERS.map((c) => [c.id, { id: c.id, title: c.title, page: c.page, ...(SITUATION_CHAPTERS.has(c.id) ? { teaser: chapterTeaser(c.id) } : {}) }]));
   const faqs = faqsFor("book", 5);
   const posts = publishedPosts().slice(0, 6);
 

@@ -6,7 +6,7 @@ import { BOOK, SITE } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
   title: "Privacy policy",
-  description: "What Still Gravity collects, why, who processes it (Clerk, Stripe, FlowGlance, Cloudflare, Vercel, Neon), how long we keep it, and your rights.",
+  description: "What Still Gravity collects, why, who processes it (Stripe, Resend, FlowGlance, Cloudflare, Vercel, Neon, Clerk), how long we keep it, and your rights.",
   path: "/privacy",
 });
 
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
     <LegalPage
       title="Privacy policy"
       path="/privacy"
-      updated="2026-10-04"
+      updated="2026-10-17"
       intro="Plain language first: we collect what we need to sell and deliver your book, answer your messages and improve the site. There are no accounts to create. We don’t sell your data and we don’t run ads."
     >
       <h2>Who we are</h2>
@@ -48,6 +48,14 @@ export default function PrivacyPage() {
         <strong>Cloudflare R2</strong> and delivered through signed links that expire. After payment we email the PDF to your
         checkout address through <strong>Resend</strong>, our email delivery provider. We log each read or download (time,
         approximate country) and each delivery email to prevent abuse of download links.
+      </p>
+      <h3 id="email">Part 1 by email</h3>
+      <p>
+        If you ask for the free chapters, we store your email address, the page you asked from, whether you ticked the
+        follow-up box, a one-way hash of your IP address (to stop abuse) and when each email went out. We send the PDF once,
+        right away, through <strong>Resend</strong>. Only if you tick the box do we send two short follow-ups over the next few
+        days; nothing else, and never from a list we bought or shared. Every email has a one-click unsubscribe link, and
+        unsubscribing stops all of them.
       </p>
       <h3>Messages you send us</h3>
       <p>
@@ -85,7 +93,7 @@ export default function PrivacyPage() {
           States).
         </li>
         <li>
-          <strong>Resend</strong> sends the email that delivers your book.
+          <strong>Resend</strong> sends the email that delivers your book, and the free chapters if you ask for them.
         </li>
         <li>
           <strong>Clerk</strong> secures the sign-in to our own admin area (buyers never sign in).
@@ -111,7 +119,8 @@ export default function PrivacyPage() {
       <ul>
         <li>Performing our contract with you: your purchase and delivering your book.</li>
         <li>Legitimate interests: security, fraud and abuse prevention, error monitoring, answering messages.</li>
-        <li>Consent: analytics, for visitors in the EU, EEA, UK and Switzerland. You can withdraw consent at any time.</li>
+        <li>Consent: analytics, for visitors in the EU, EEA, UK and Switzerland, and the optional Part 1 follow-up emails. You can withdraw consent at any time.</li>
+        <li>Your request: sending the free chapters you asked for.</li>
         <li>Legal obligations: keeping transaction records for tax and accounting.</li>
       </ul>
 
@@ -119,6 +128,7 @@ export default function PrivacyPage() {
       <ul>
         <li>Order records, including the email your book was delivered to: seven years, for tax and accounting.</li>
         <li>Contact messages: up to 24 months.</li>
+        <li>Part 1 sign-ups: until you unsubscribe or ask us to delete them, and no longer than 24 months after the last email we sent you.</li>
         <li>Error logs and download logs: up to 12 months.</li>
         <li>Database backups: rolling 30 days.</li>
       </ul>
