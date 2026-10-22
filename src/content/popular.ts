@@ -5,7 +5,7 @@
 export const POPULAR_TOOLS: { path: string; label: string }[] = [
   { path: "/blog/approaching/how-to-get-a-girlfriend", label: "How to get a girlfriend" },
   { path: "/blog/signals/signs-she-likes-you", label: "Signs she likes you" },
-  { path: "/blog/texting/how-to-text-women", label: "How to text women" },
+  { path: "/blog/texting/how-to-text-women", label: "How to text a girl you like" },
   { path: "/blog/approaching/tinder-bio-for-guys", label: "Tinder bio for guys" },
   { path: "/blog/rejection/no-contact-rule", label: "No contact rule" },
   { path: "/blog/rejection/should-i-get-back-with-my-ex", label: "Should I get back with my ex?" },
@@ -19,7 +19,7 @@ export const POPULAR_TOOLS: { path: string; label: string }[] = [
   { path: "/blog/approaching/bumble-bio-for-guys", label: "Bumble bio for guys" },
   { path: "/blog/approaching/hinge-prompt-answers", label: "Hinge prompt answers" },
   { path: "/blog/approaching/tinder-vs-bumble", label: "Tinder vs Bumble" },
-  { path: "/blog/attraction/how-attractive-am-i", label: "How attractive am I? quiz" },
+  { path: "/blog/attraction/how-attractive-am-i", label: "Attractiveness test for men" },
   { path: "/blog/relationships/when-to-propose", label: "When to propose" },
   { path: "/blog/approaching/are-dating-apps-worth-it", label: "Are dating apps worth it?" },
   { path: "/blog/approaching/hinge-openers", label: "Hinge openers" },
@@ -29,6 +29,6 @@ export const POPULAR_TOOLS: { path: string; label: string }[] = [
   { path: "/blog/dates/half-your-age-plus-seven", label: "Dating age calculator" },
   { path: "/blog/relationships/date-night-ideas", label: "Date night ideas" },
   { path: "/blog/dates/first-date-ideas", label: "First date ideas" },
-  { path: "/blog/signals/should-i-ask-her-out", label: "Should I ask her out? quiz" },
+  { path: "/blog/signals/should-i-ask-her-out", label: "How to ask a girl out" },
   { path: "/blog/rejection/how-long-to-get-over-a-breakup", label: "Breakup recovery calculator" },
 ];

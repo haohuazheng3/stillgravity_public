@@ -21,13 +21,13 @@ export const CATEGORIES: Category[] = [
   {
     slug: "texting",
     name: "Texting",
-    title: "How to text women: what to send, when to wait, and what silence means",
+    title: "Texting advice for men: what to send, when to wait, and what silence means",
     description:
-      "How to text women without the anxiety: first texts, rhythm, slow replies, dry texters, double texting, and asking her out over text, with exact words to adapt.",
+      "Texting advice for men without the anxiety: first texts, rhythm, slow replies, dry texters, double texting, and asking her out over text, with exact words to adapt.",
     intro:
       "Texting is where men lose women they already won over in person, rarely with one terrible message and usually with a dozen small signals of anxiety. These guides give you rules of rhythm, exact words, and calm recoveries for the 2 a.m. moments.",
     chapters: ["4.1", "4.2", "4.3", "4.4", "4.5", "4.6", "4.7", "4.8", "1.6"],
-    keyword: "how to text women",
+    keyword: "texting advice for men",
     guide: [
       { q: "What is texting actually for?", a: "Setting up the next time you see her. Texting builds a little momentum between meetings; it can’t replace them. Men who try to win her over text usually lose the in-person spark they already had." },
       { q: "How often should I text her?", a: "Roughly match her rhythm and keep it light. If her replies are shorter and slower than yours for a week, stop adding volume and make one clear plan instead. Long silences after a good date are normal; a pattern of one-word replies is information." },
@@ -38,13 +38,13 @@ export const CATEGORIES: Category[] = [
   {
     slug: "approaching",
     name: "Approaching & apps",
-    title: "How to talk to women: approaching, opening and dating apps without the cringe",
+    title: "Approaching women and dating apps: openers, profiles and her number, no cringe",
     description:
-      "How to talk to women in person and on the apps: where to meet them, what to say first, Hinge prompts and openers that get replies, and fixing a profile that gets no matches.",
+      "Approaching women in person and on the apps: where to meet them, what to say first, Hinge prompts and openers that get replies, and fixing a profile that gets no matches.",
     intro:
       "Most men never lose a woman’s interest; they never start the conversation. From the first hello to a way to see her again, in person and on the apps, with openers that sound like you on a good day.",
     chapters: ["2.2", "3.1", "3.2", "3.3", "3.4", "3.5", "3.6", "3.7", "3.8"],
-    keyword: "how to talk to women",
+    keyword: "approaching women",
     guide: [
       { q: "How do I talk to a woman I don’t know?", a: "Simply and specifically. Comment on what you’re both experiencing, ask one real question, and listen to the answer. Research on opening lines has favored plain, direct openers over clever ones since the 1980s; the delivery matters more than the words." },
       { q: "Is it better to meet women online or in person?", a: "Both work; most men need both. Meeting online became the most common way US couples met around 2013, but the apps reward men with a strong profile and punish the rest. Real life rewards men who show up to the same places repeatedly." },
@@ -55,13 +55,13 @@ export const CATEGORIES: Category[] = [
   {
     slug: "signals",
     name: "Reading her signals",
-    title: "Signs she likes you: reading her signals, mixed messages and the friend zone",
+    title: "Reading her signals: interest, mixed messages, pulling away and the friend zone",
     description:
-      "The signs she likes you are patterns of effort, not single moments. Read interest the way women do, decode mixed signals, and stop guessing with a clear offer.",
+      "Reading women’s signals: interest shows in patterns of effort, not single moments. Decode mixed signals, notice a fade early, and stop guessing with a clear offer.",
     intro:
       "Most men aren’t bad at talking to women. They’re bad at reading the answer. Learn to read interest the way women do: in clusters and patterns, not single moments, and to make a clear offer instead of decoding forever.",
     chapters: ["5.1", "5.2", "5.3", "5.4", "5.5", "5.6", "1.5"],
-    keyword: "signs she likes you",
+    keyword: "reading women’s signals",
     guide: [
       { q: "What are the real signs she likes you?", a: "Effort and reciprocity. She answers with substance, asks questions back, makes time to see you and sometimes starts the contact. One sign means little; three or four that repeat over two weeks mean a lot. Judge what she does, not what she says she’ll do." },
       { q: "Why do men misread interest so often?", a: "Mostly in the pessimistic direction. Studies of first conversations find people underestimate how much the other person liked them, a bias researchers call the liking gap. The cure isn’t more decoding; it’s a small, clear invitation that lets her show you." },
@@ -72,13 +72,13 @@ export const CATEGORIES: Category[] = [
   {
     slug: "dates",
     name: "Dates",
-    title: "First date tips: where to go, what to talk about, and how to end it well",
+    title: "First and second dates: where to go, what to talk about, and how to end it well",
     description:
-      "First date tips for men: ideas that create chemistry, questions that make her open up, second date ideas, what to text after, and how to end the night on a high.",
+      "First and second dates for men: ideas that create chemistry, questions that make her open up, second date ideas, what to text after, and ending the night on a high.",
     intro:
       "A first date isn’t a job interview or an audition. It’s a chance to find out whether you enjoy each other in person. Plan it, lead it, build chemistry honestly, and end it on a high.",
     chapters: ["6.1", "6.2", "6.3", "6.4", "6.5", "6.6", "6.7"],
-    keyword: "first date tips",
+    keyword: "first and second dates",
     guide: [
       { q: "What makes a good first date?", a: "Short, close and easy to extend. Pick a place where you can talk and stand or sit at an angle, have a second stop in mind, and keep it to about 90 minutes unless it’s going well. Novelty and light activity beat a long dinner." },
       { q: "What should we talk about?", a: "Her answers, not your résumé. People who ask more follow-up questions are liked more, according to a Harvard study of speed dates. Ask one real question, follow up twice, then share something of your own." },
@@ -106,13 +106,13 @@ export const CATEGORIES: Category[] = [
   {
     slug: "rejection",
     name: "Rejection & moving on",
-    title: "How to get over someone: rejection, ghosting, an ex, and moving on",
+    title: "Rejection and breakups: ghosting, an ex, no contact and moving on",
     description:
-      "How to get over someone for men: handling rejection, being ghosted, whether to text your ex, blocking or muting, and an honest estimate of how long recovery takes.",
+      "Rejection and breakups for men: handling a no, being ghosted, whether to text your ex, blocking or muting, no contact, and how long recovery really takes.",
     intro:
       "Every man goes through rejection, ghosting and the slow fade. What separates men isn’t whether it happens but how they handle it, and who they become afterward.",
     chapters: ["9.1", "9.2", "9.3", "9.4", "9.5", "9.6", "9.7", "1.7"],
-    keyword: "how to get over someone",
+    keyword: "rejection and breakups",
     guide: [
       { q: "How do I get over someone faster?", a: "Cut the inputs and rebuild the routine. Checking her profile, rereading messages and replaying conversations all keep the wound open. Research on breakup recovery links ongoing contact and online monitoring to slower recovery." },
       { q: "Should I text my ex?", a: "Only if you can say what you want and accept any answer, including none. Texting to test whether she still cares usually restarts the pain. The decision tool walks you through it in a minute." },
@@ -123,13 +123,13 @@ export const CATEGORIES: Category[] = [
   {
     slug: "relationships",
     name: "Relationships",
-    title: "How to be a better boyfriend: connection, conflict, trust and lasting attraction",
+    title: "Relationship advice for men: connection, conflict, trust and lasting attraction",
     description:
-      "How to be a better boyfriend, backed by relationship research: responding to her bids, fighting fair, jealousy and trust, red flags, and when to stay or leave.",
+      "Relationship advice for men, backed by research: responding to her bids, fighting fair, jealousy and trust, red flags, and when to stay or leave.",
     intro:
       "Getting her is the beginning, not the finish line. The skills that keep a relationship alive for years are different from the ones that start it, and decades of research show which ones matter.",
     chapters: ["10.1", "10.2", "10.3", "10.4", "10.5", "10.6"],
-    keyword: "how to be a better boyfriend",
+    keyword: "relationship advice for men",
     guide: [
       { q: "What makes someone a good boyfriend?", a: "Responsiveness. Couples who stay together turn toward each other’s small bids for attention far more often than couples who split. Noticing, listening and following through on small things matters more than grand gestures." },
       { q: "How do we stop having the same fight?", a: "Start softer and repair faster. Criticism, contempt, defensiveness and stonewalling predict breakups; a gentle start-up and a quick repair attempt predict staying together. Most recurring fights are about a need that never got said plainly." },
@@ -173,6 +173,13 @@ export const CATEGORIES: Category[] = [
     intro:
       "Every technique works better when the man using it has a life worth sharing. The foundations that make attraction a byproduct instead of a project, and that pay off far beyond dating.",
     chapters: ["2.1", "2.3", "2.4", "2.5", "2.6", "12.1", "12.2", "12.3", "12.4", "12.5", "12.6", "12.7", "12.8"],
+    keyword: "self improvement for men",
+    guide: [
+      { q: "Why does self-improvement matter for dating?", a: "Because women date the whole man, not the opener. A full week, close friends, a body you look after and something you’re building make you easier to like and harder to rattle. They also make a no hurt less, because she isn’t the center of your life." },
+      { q: "Where should I start?", a: "With sleep, training and one social commitment. They’re the cheapest changes with the widest effect: energy, mood and posture improve within weeks, and a weekly activity puts new people in your life without any extra effort." },
+      { q: "What if I’ve never had a girlfriend?", a: "You’re less unusual than it feels, and it’s fixable. Most men in that spot are short on chances, not on worth. Build a social routine, practice low-stakes conversations, then ask clearly and often." },
+      { q: "How do I stop being boring?", a: "Ask follow-up questions and share real opinions. Most men who feel boring are playing it safe: neutral topics, short answers, no stories. Curiosity and a little self-disclosure fix most of it within a few conversations." },
+    ],
   },
 ];
 
