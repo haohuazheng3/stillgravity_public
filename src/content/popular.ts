@@ -4,6 +4,13 @@
  */
 export const POPULAR_TOOLS: { path: string; label: string }[] = [
   { path: "/blog/approaching/how-to-get-a-girlfriend", label: "How to get a girlfriend" },
+  { path: "/blog/approaching/how-to-talk-to-women", label: "How to talk to women" },
+  { path: "/blog/attraction/why-am-i-single", label: "Why am I single? quiz" },
+  { path: "/blog/signals/how-to-tell-a-girl-you-like-her", label: "How to tell a girl you like her" },
+  { path: "/blog/talking-stage/how-to-ask-a-girl-to-be-your-girlfriend", label: "How to ask her to be your girlfriend" },
+  { path: "/blog/attraction/how-to-get-a-girl-to-like-you", label: "How to get a girl to like you" },
+  { path: "/blog/approaching/how-to-approach-a-girl", label: "How to approach a girl" },
+  { path: "/blog/self-improvement/never-had-a-girlfriend", label: "Never had a girlfriend?" },
   { path: "/blog/signals/signs-she-likes-you", label: "Signs she likes you" },
   { path: "/blog/texting/how-to-text-women", label: "How to text a girl you like" },
   { path: "/blog/approaching/tinder-bio-for-guys", label: "Tinder bio for guys" },
