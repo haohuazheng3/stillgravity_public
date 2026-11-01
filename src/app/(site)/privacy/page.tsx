@@ -15,7 +15,7 @@ export default function PrivacyPage() {
     <LegalPage
       title="Privacy policy"
       path="/privacy"
-      updated="2026-10-17"
+      updated="2026-10-31"
       intro="Plain language first: we collect what we need to sell and deliver your book, answer your messages and improve the site. There are no accounts to create. We don’t sell your data and we don’t run ads."
     >
       <h2>Who we are</h2>
@@ -73,9 +73,16 @@ export default function PrivacyPage() {
         never on ours, so FlowGlance cannot see them.
       </p>
       <p>
-        If you visit from the European Union, the European Economic Area, the United Kingdom or Switzerland, FlowGlance only
-        loads after you accept it. Elsewhere it loads by default and you can opt out at any time with the “Cookie settings”
-        link in the footer. See our <Link href="/cookie-policy">cookie policy</Link>.
+        <strong>Where you are decides how it starts.</strong> If you visit from the European Union, the European Economic Area,
+        the United Kingdom or Switzerland (or we can’t tell where you are), FlowGlance only loads after you click “Accept
+        analytics” in the banner; if you choose “Essential only” it never loads. Everywhere else we don’t show a banner:
+        FlowGlance runs by default.
+      </p>
+      <p>
+        <strong>How to say no, wherever you are.</strong> Click “Do not track me” at the bottom of any page. We save your choice
+        in a cookie (<code>sg_consent</code>, 180 days) and FlowGlance stops at once and doesn’t load again on this browser.
+        We also treat a Global Privacy Control signal from your browser as a no. You can change your mind with “Cookie
+        settings” in the same place. See our <Link href="/cookie-policy">cookie policy</Link>.
       </p>
       <h3>Error reports</h3>
       <p>
@@ -119,7 +126,7 @@ export default function PrivacyPage() {
       <ul>
         <li>Performing our contract with you: your purchase and delivering your book.</li>
         <li>Legitimate interests: security, fraud and abuse prevention, error monitoring, answering messages.</li>
-        <li>Consent: analytics, for visitors in the EU, EEA, UK and Switzerland, and the optional Part 1 follow-up emails. You can withdraw consent at any time.</li>
+        <li>Consent: analytics, for visitors in the EU, EEA, UK and Switzerland, and the optional Part 1 follow-up emails. You can withdraw consent at any time, for analytics with “Do not track me” in the footer.</li>
         <li>Your request: sending the free chapters you asked for.</li>
         <li>Legal obligations: keeping transaction records for tax and accounting.</li>
       </ul>
@@ -137,7 +144,8 @@ export default function PrivacyPage() {
       <p>
         Depending on where you live, you can ask to access, correct, export or delete your personal data, object to or restrict
         certain processing, and withdraw consent. California residents have the right to know, delete and correct personal
-        information and not to be discriminated against for exercising those rights. Email{" "}
+        information and not to be discriminated against for exercising those rights. To opt out of analytics, click “Do not
+        track me” in the footer or send a Global Privacy Control signal. For anything else, email{" "}
         <a href={`mailto:${SITE.email}`}>{SITE.email}</a> from the address you bought with and we’ll respond within 30 days. You
         can also complain to your local data protection authority.
       </p>

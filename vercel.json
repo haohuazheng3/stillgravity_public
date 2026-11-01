@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "ignoreCommand": "bash scripts/vercel-ignore.sh"
+  "ignoreCommand": "bash scripts/vercel-ignore.sh",
+  "crons": [
+    {
+      "path": "/api/cron/deliver",
+      "schedule": "*/30 * * * *"
+    }
+  ]
 }

@@ -41,24 +41,46 @@ function authHeaders(): Record<string, string> {
   return { Authorization: `Bearer ${requireEnv("FILES_API_TOKEN")}` };
 }
 
+/**
+ * One call to the worker with a hard timeout and a single retry on network errors or 5xx.
+ * Without a timeout a stalled connection hangs until the function is killed (60 s), which
+ * skips every catch and cleanup behind it (2026-10-29: a delivery email stuck that way).
+ */
+export async function workerFetch(url: string, init: RequestInit, timeoutMs: number, label: string): Promise<Response> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(url, { ...init, cache: "no-store", signal: AbortSignal.timeout(timeoutMs) });
+      if (res.status < 500 || attempt === 2) return res;
+      lastErr = new Error(`files worker ${label} answered ${res.status}`);
+    } catch (err) {
+      lastErr = err;
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  const msg = lastErr instanceof Error ? `${lastErr.name}: ${lastErr.message}` : String(lastErr);
+  throw new Error(`files worker ${label} failed twice (${msg})`);
+}
+
 export async function fileExists(key: string): Promise<boolean> {
-  const res = await fetch(`${base()}/o/${encodeKey(key)}`, { method: "HEAD", headers: authHeaders(), cache: "no-store" });
+  const res = await workerFetch(`${base()}/o/${encodeKey(key)}`, { method: "HEAD", headers: authHeaders() }, 6_000, `HEAD ${key}`);
   if (res.status === 404) return false;
   if (!res.ok) throw new Error(`files worker HEAD ${key} answered ${res.status}`);
   return true;
 }
 
 export async function readFile(key: string): Promise<Uint8Array> {
-  const res = await fetch(`${base()}/o/${encodeKey(key)}`, { headers: authHeaders(), cache: "no-store" });
+  const res = await workerFetch(`${base()}/o/${encodeKey(key)}`, { headers: authHeaders() }, 12_000, `GET ${key}`);
   if (!res.ok) throw new Error(`files worker GET ${key} answered ${res.status}`);
   return new Uint8Array(await res.arrayBuffer());
 }
 
 export async function writeFile(key: string, body: Uint8Array, contentType: string): Promise<void> {
-  const res = await fetch(`${base()}/o/${encodeKey(key)}`, {
-    method: "PUT",
-    headers: { ...authHeaders(), "Content-Type": contentType },
-    body: Buffer.from(body),
-  });
+  const res = await workerFetch(
+    `${base()}/o/${encodeKey(key)}`,
+    { method: "PUT", headers: { ...authHeaders(), "Content-Type": contentType }, body: Buffer.from(body) },
+    12_000,
+    `PUT ${key}`,
+  );
   if (!res.ok) throw new Error(`files worker PUT ${key} answered ${res.status}: ${await res.text().catch(() => "")}`);
 }

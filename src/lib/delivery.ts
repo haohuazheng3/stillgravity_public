@@ -76,6 +76,18 @@ async function sendCopy(buyerId: string, email: string, ref: string, idempotency
   });
 }
 
+/** Rejects when `p` takes longer than `ms`, so the caller's catch still runs inside the function's lifetime. */
+export function withDeadline<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} took longer than ${Math.round(ms / 1000)}s`)), ms);
+  });
+  return Promise.race([p, deadline]).finally(() => clearTimeout(timer));
+}
+
+/** Delivery runs inside routes capped at 60 s; stop at 40 s so the failure is recorded and the claim released. */
+const DELIVERY_DEADLINE_MS = 40_000;
+
 /** Emails the personal copy for a paid order, exactly once. */
 export async function deliverOrder(orderId: string): Promise<DeliveryResult> {
   const claimed = await db
@@ -86,7 +98,8 @@ export async function deliverOrder(orderId: string): Promise<DeliveryResult> {
         eq(orders.id, orderId),
         eq(orders.status, "paid"),
         isNull(orders.emailSentAt),
-        or(isNull(orders.emailClaimedAt), lt(orders.emailClaimedAt, sql`now() - interval '5 minutes'`)),
+        // A claim can only be live for one capped function run (60 s); older ones belong to a run that died.
+        or(isNull(orders.emailClaimedAt), lt(orders.emailClaimedAt, sql`now() - interval '2 minutes'`)),
       ),
     )
     .returning();
@@ -102,7 +115,7 @@ export async function deliverOrder(orderId: string): Promise<DeliveryResult> {
   }
 
   try {
-    await sendCopy(order.userId, order.email, orderRef(order.id), `sg-deliver-${order.id}`);
+    await withDeadline(sendCopy(order.userId, order.email, orderRef(order.id), `sg-deliver-${order.id}`), DELIVERY_DEADLINE_MS, "delivery email");
     await db.update(orders).set({ emailSentAt: sql`now()`, emailError: null, emailClaimedAt: null, updatedAt: sql`now()` }).where(eq(orders.id, order.id));
     return "sent";
   } catch (err) {
@@ -115,7 +128,8 @@ export async function deliverOrder(orderId: string): Promise<DeliveryResult> {
     // The buyer already has the download on the success page; page the owner once retries keep failing.
     await captureError(err, {
       route: "delivery.deliverOrder",
-      severity: order.emailAttempts >= 3 ? "error" : "warn",
+      // The every-30-minutes retry gives one free pass; a second failure turns health red, which pages the owner.
+      severity: order.emailAttempts >= 2 ? "error" : "warn",
       context: { orderId: order.id, attempt: order.emailAttempts },
     });
     return "failed";
@@ -133,8 +147,13 @@ export async function resendCopy(email: string): Promise<"sent" | "not-owned"> {
   return "sent";
 }
 
-/** Paid orders from the last 30 days whose email hasn't gone out yet (the reconcile job retries them). */
-export async function deliverPending(limit = 25): Promise<{ sent: string[]; failed: string[] }> {
+/**
+ * Paid orders from the last 30 days whose email hasn't gone out yet. Run every 30 minutes by
+ * /api/cron/deliver and daily by reconcile. Stops starting new sends once `budgetMs` is spent,
+ * so a run never outlives its function.
+ */
+export async function deliverPending(limit = 25, budgetMs = 80_000): Promise<{ sent: string[]; failed: string[]; deferred: number }> {
+  const started = Date.now();
   const rows = await db
     .select({ id: orders.id })
     .from(orders)
@@ -147,8 +166,12 @@ export async function deliverPending(limit = 25): Promise<{ sent: string[]; fail
       ),
     )
     .limit(limit);
-  const out = { sent: [] as string[], failed: [] as string[] };
+  const out = { sent: [] as string[], failed: [] as string[], deferred: 0 };
   for (const r of rows) {
+    if (Date.now() - started > budgetMs - DELIVERY_DEADLINE_MS) {
+      out.deferred++;
+      continue;
+    }
     const result = await deliverOrder(r.id);
     if (result === "sent") out.sent.push(r.id);
     else if (result === "failed") out.failed.push(r.id);

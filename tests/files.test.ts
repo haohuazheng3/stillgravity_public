@@ -19,3 +19,37 @@ describe("signed file URLs", () => {
     expect(url.searchParams.get("sig")).toHaveLength(64);
   });
 });
+
+describe("worker calls", () => {
+  it("retries once after a network error and returns the second answer", async () => {
+    const { workerFetch } = await import("@/lib/files");
+    let calls = 0;
+    const real = globalThis.fetch;
+    globalThis.fetch = (async () => {
+      calls++;
+      if (calls === 1) throw new TypeError("fetch failed");
+      return new Response("ok", { status: 200 });
+    }) as typeof fetch;
+    try {
+      const res = await workerFetch("https://files.example.com/o/x", {}, 1000, "GET x");
+      expect(res.status).toBe(200);
+      expect(calls).toBe(2);
+    } finally {
+      globalThis.fetch = real;
+    }
+  });
+
+  it("gives up after two failures with a clear error instead of hanging", async () => {
+    const { workerFetch } = await import("@/lib/files");
+    const real = globalThis.fetch;
+    globalThis.fetch = ((_url: string, init?: RequestInit) =>
+      new Promise((_, reject) => init?.signal?.addEventListener("abort", () => reject(init.signal!.reason)))) as typeof fetch;
+    try {
+      const started = Date.now();
+      await expect(workerFetch("https://files.example.com/o/x", {}, 50, "GET x")).rejects.toThrow(/failed twice/);
+      expect(Date.now() - started).toBeLessThan(2000);
+    } finally {
+      globalThis.fetch = real;
+    }
+  });
+});

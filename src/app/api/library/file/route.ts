@@ -1,6 +1,9 @@
 import { headers } from "next/headers";
+import { after } from "next/server";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { downloads } from "@/lib/db/schema";
+import { downloads, orders } from "@/lib/db/schema";
+import { deliverOrder } from "@/lib/delivery";
 import { activeEntitlement } from "@/lib/entitlements";
 import { buyerById } from "@/lib/buyers";
 import { verifyDownloadToken } from "@/lib/download-token";
@@ -41,6 +44,14 @@ export async function GET(req: Request) {
     const { key } = await licensedCopyKey(buyerId, buyer.email);
     const h = await headers();
     await db.insert(downloads).values({ id: newId("dl"), userId: buyerId, product: PRODUCT_ID, mode, country: h.get("x-vercel-ip-country") });
+
+    // If the delivery email for this purchase never went out (e.g. the webhook run died), retry it now.
+    after(async () => {
+      const o = (await db.select({ sent: orders.emailSentAt }).from(orders).where(eq(orders.id, ent.orderId)).limit(1))[0];
+      if (o && !o.sent) {
+        await deliverOrder(ent.orderId).catch((err) => captureError(err, { route: "/api/library/file", context: { stage: "deliver", orderId: ent.orderId } }));
+      }
+    });
 
     const signed = signedFileUrl(key, { disposition: mode === "download" ? "attachment" : "inline", filename: BOOK.fileName, ttlSeconds: 300 });
     return new Response(null, { status: 302, headers: { Location: signed, "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" } });

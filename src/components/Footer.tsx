@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LogoMark, Wordmark } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
-import { CookieSettingsLink } from "./Consent";
+import { CookieSettingsLink, DoNotTrackLink } from "./Consent";
 import { SITE } from "@/lib/site";
 
 const COLS = [
@@ -95,6 +95,7 @@ export function Footer() {
             .
           </p>
           <div className="flex flex-wrap items-center gap-3">
+            <DoNotTrackLink />
             <CookieSettingsLink />
             <ThemeToggle />
           </div>

@@ -51,3 +51,11 @@ describe("delivery email", () => {
     expect(m.html).toContain("mode=download&amp;t=v1.a.b.c"); // escaped inside the HTML attribute
   });
 });
+
+describe("delivery deadline", () => {
+  it("rejects a send that runs past the deadline and passes through a fast one", async () => {
+    const { withDeadline } = await import("@/lib/delivery");
+    await expect(withDeadline(new Promise(() => {}), 30, "delivery email")).rejects.toThrow(/longer than/);
+    await expect(withDeadline(Promise.resolve("sent"), 1000, "delivery email")).resolves.toBe("sent");
+  });
+});
