@@ -1036,7 +1036,7 @@ function LadderView({ tool, chapters, price }: { tool: LadderTool } & Shared) {
     return (
       <div>
         <fieldset>
-          <legend className="text-[0.95rem] font-semibold text-ink">Where are you now? Pick the hardest one you can already do.</legend>
+          <legend className="text-[0.95rem] font-semibold text-ink">Where does it get hard? Pick the first step that makes you nervous.</legend>
           <div className="mt-2 grid gap-2">
             {tool.levels.map((l) => (
               <button key={l.n} type="button" className="chip w-full justify-start !rounded-2xl !px-4 !py-3 text-left" data-selected={start === l.n ? "true" : undefined} aria-pressed={start === l.n} onClick={() => { begin(); setStart(l.n); }}>
