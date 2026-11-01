@@ -82,6 +82,28 @@ export const FORMULAS: Record<Formula, (v: Record<string, number>) => FormulaOut
     return { result: "ready", lines };
   },
   /**
+   * "How long should the talking stage last?" Rules of thumb, stated as such: meet within
+   * about two weeks of messaging (online daters who switch to meeting sooner tend to do
+   * better than those who message for weeks), and have the "what are we" talk once you've
+   * been dating steadily for roughly one to two months.
+   */
+  talkingStage: (v) => {
+    const weeks = Math.max(0, Math.floor(v.weeks || 0));
+    const met = Math.max(0, Math.floor(v.dates || 0));
+    const lines = [
+      { label: "Weeks talking", value: `${weeks}` },
+      { label: "Times you’ve met", value: met >= 4 ? "4+" : `${met}` },
+      { label: "Usual point to meet", value: "within 1–2 weeks" },
+      { label: "Usual point for “what are we?”", value: "after 4–8 weeks of dating" },
+    ];
+    if (v.talked >= 2) return { result: "defined", lines };
+    if (met === 0) return { result: weeks >= 2 ? "meet-now" : "ask-out", lines };
+    if (weeks >= 12) return { result: "overdue", lines };
+    if (met >= 4 && weeks >= 6 && v.talked < 1) return { result: "time-to-talk", lines };
+    if (v.plans === 0 && weeks >= 3) return { result: "stalled", lines };
+    return { result: "on-track", lines };
+  },
+  /**
    * Engagement ring budget. Shows the advertising rule (two months of pay) and the
    * average spend for reference, then a cash-only comfortable budget: money already
    * saved, capped at about one month of take-home pay; high-interest debt comes first.

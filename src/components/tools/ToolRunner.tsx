@@ -1,12 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { track } from "@/components/Consent";
 import type {
   CalculatorTool,
+  ChatTool,
   CheckerTool,
   DecisionTool,
+  DecoderTool,
+  LadderTool,
+  SendCheckTool,
   GeneratorItem,
   GeneratorTool,
   QuizTool,
@@ -16,6 +20,8 @@ import type {
   ToolResult,
 } from "@/content/tools/types";
 import { FORMULAS } from "./formulas";
+import { analyzeChat, formatMins, manualChat, parseWhatsApp, readZipText, type ChatMsg, type ChatStats } from "./chat";
+import { buildPlan, checkSend, decodePhrase } from "./logic";
 
 export type ChapterInfo = { id: string; title: string; page: number; teaser?: string };
 
@@ -43,6 +49,10 @@ export function ToolRunner({ tool, chapters, price }: { tool: Tool } & Shared) {
         {tool.kind === "calculator" ? <CalculatorView tool={tool} {...shared} /> : null}
         {tool.kind === "generator" ? <GeneratorView tool={tool} {...shared} /> : null}
         {tool.kind === "checker" ? <CheckerView tool={tool} {...shared} /> : null}
+        {tool.kind === "decoder" ? <DecoderView tool={tool} {...shared} /> : null}
+        {tool.kind === "sendcheck" ? <SendCheckView tool={tool} {...shared} /> : null}
+        {tool.kind === "chat" ? <ChatView tool={tool} {...shared} /> : null}
+        {tool.kind === "ladder" ? <LadderView tool={tool} {...shared} /> : null}
       </div>
     </section>
   );
@@ -591,6 +601,543 @@ function CheckerView({ tool, ...shared }: { tool: CheckerTool } & Shared) {
           </ResultCard>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/* ---------- decoder ---------- */
+
+function DecoderView({ tool, ...shared }: { tool: DecoderTool } & Shared) {
+  const [phraseId, setPhraseId] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<number[]>([]);
+  const start = useStartOnce(tool.id);
+  const phrase = tool.phrases.find((p) => p.id === phraseId) ?? null;
+  const asking = phrase && !phrase.fixed && answers.length < tool.questions.length;
+  const result = phrase && !asking ? decodePhrase(tool, phrase, answers) : null;
+
+  if (phrase && result) {
+    return (
+      <div>
+        <p className="mb-3 text-[0.9rem] text-ink-3">
+          She said: <span className="font-semibold text-ink">“{phrase.say}”</span>
+        </p>
+        <ResultCard
+          toolId={tool.id}
+          result={result}
+          next={tool.next}
+          method={tool.method}
+          restartLabel="Decode something else"
+          onRestart={() => {
+            setPhraseId(null);
+            setAnswers([]);
+          }}
+          {...shared}
+        />
+      </div>
+    );
+  }
+  if (phrase && asking) {
+    const q = tool.questions[answers.length];
+    return (
+      <div>
+        <p className="mb-1 text-[0.9rem] text-ink-3">
+          She said: <span className="font-semibold text-ink">“{phrase.say}”</span>
+        </p>
+        <Progress at={answers.length} of={tool.questions.length} />
+        <p className="text-[1.08rem] font-semibold leading-snug text-ink">{q.q}</p>
+        {q.help ? <p className="mt-1 text-[0.9rem] text-ink-4">{q.help}</p> : null}
+        <div className="mt-4">
+          <OptionList
+            options={q.options.map((o) => o.label)}
+            onPick={(i) => {
+              const next = [...answers, i];
+              setAnswers(next);
+              if (next.length === tool.questions.length) track("tool_complete", { tool: tool.id, result: decodePhrase(tool, phrase, next).id });
+            }}
+          />
+        </div>
+        <button type="button" className="btn btn-quiet btn-sm mt-4" onClick={() => (answers.length ? setAnswers(answers.slice(0, -1)) : setPhraseId(null))}>
+          ← Back
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div>
+      {tool.groups.map((g) => {
+        const items = tool.phrases.filter((p) => p.group === g.id);
+        if (!items.length) return null;
+        return (
+          <fieldset key={g.id} className="mb-4">
+            <legend className="text-[0.92rem] font-semibold text-ink">{g.label ?? g.heading}</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {items.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className="chip"
+                  onClick={() => {
+                    start();
+                    setPhraseId(p.id);
+                    setAnswers([]);
+                    if (p.fixed) track("tool_complete", { tool: tool.id, result: `${p.id}-${p.fixed}` });
+                  }}
+                >
+                  “{p.say}”
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------- sendcheck ---------- */
+
+function SendCheckView({ tool, ...shared }: { tool: SendCheckTool } & Shared) {
+  const [draft, setDraft] = useState("");
+  const [her, setHer] = useState("");
+  const [ctx, setCtx] = useState<Record<string, number>>({});
+  const [checked, setChecked] = useState(false);
+  const start = useStartOnce(tool.id);
+  const ready = draft.trim().length >= 1 && tool.context.every((c) => ctx[c.id] !== undefined);
+  const report = useMemo(() => (checked ? checkSend(tool, draft, her, ctx) : null), [checked, tool, draft, her, ctx]);
+
+  if (report) {
+    const flagged = [...report.stops, ...report.edits];
+    return (
+      <ResultCard toolId={tool.id} result={report.result} next={tool.next} method={tool.method} restartLabel="Edit and check again" onRestart={() => setChecked(false)} {...shared}>
+        <div className="mt-4 rounded-2xl bg-slab-2 px-4 py-3">
+          <p className="text-[0.8rem] text-ink-4">Your draft</p>
+          <p className="mt-1 whitespace-pre-wrap break-words text-[0.98rem] text-ink">{draft.trim()}</p>
+        </div>
+        {flagged.length || report.goods.length ? (
+          <ul className="mt-3 grid gap-2">
+            {flagged.map((r) => (
+              <li key={r.id} className="flex gap-3 rounded-2xl bg-slab-2 px-4 py-3 text-[0.94rem]">
+                <span aria-hidden className={r.kind === "stop" ? "text-bad" : "text-accent-text"}>
+                  {r.kind === "stop" ? "■" : "✗"}
+                </span>
+                <span className="min-w-0">
+                  <span className="font-semibold text-ink">{r.label}</span>
+                  <span className="mt-0.5 block text-ink-3">{r.fix}</span>
+                </span>
+              </li>
+            ))}
+            {report.goods.map((r) => (
+              <li key={r.id} className="flex gap-3 rounded-2xl bg-slab-2 px-4 py-3 text-[0.94rem]">
+                <span aria-hidden className="text-ok">
+                  ✓
+                </span>
+                <span className="font-semibold text-ink">{r.label}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </ResultCard>
+    );
+  }
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!ready) return;
+        setChecked(true);
+        const r = checkSend(tool, draft, her, ctx);
+        track("tool_complete", { tool: tool.id, result: r.result.id, flags: r.stops.length + r.edits.length });
+      }}
+    >
+      <label className="block">
+        <span className="text-[0.92rem] font-semibold text-ink">{tool.input.label}</span>
+        <textarea
+          className="input mt-1.5 min-h-[110px] w-full resize-y"
+          maxLength={tool.input.maxLength}
+          placeholder={tool.input.placeholder}
+          value={draft}
+          onChange={(e) => {
+            start();
+            setDraft(e.target.value);
+          }}
+        />
+      </label>
+      <label className="mt-4 block">
+        <span className="text-[0.92rem] font-semibold text-ink">{tool.her.label}</span>
+        <textarea className="input mt-1.5 min-h-[70px] w-full resize-y" maxLength={tool.her.maxLength} placeholder={tool.her.placeholder} value={her} onChange={(e) => setHer(e.target.value)} />
+      </label>
+      {tool.context.map((c) => (
+        <fieldset key={c.id} className="mt-4">
+          <legend className="text-[0.92rem] font-semibold text-ink">{c.label}</legend>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {c.options.map((o) => (
+              <button
+                key={o.label}
+                type="button"
+                className="chip"
+                data-selected={ctx[c.id] === o.value ? "true" : undefined}
+                aria-pressed={ctx[c.id] === o.value}
+                onClick={() => {
+                  start();
+                  setCtx({ ...ctx, [c.id]: o.value });
+                }}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      ))}
+      <p className="mt-3 text-[0.8rem] text-ink-4">Checked in your browser. Nothing you type is sent or stored.</p>
+      <button type="submit" className="btn btn-primary mt-3" disabled={!ready}>
+        Check my text
+      </button>
+    </form>
+  );
+}
+
+/* ---------- chat ---------- */
+
+const pct = (a: number, b: number) => (a + b ? `${Math.round((a / (a + b)) * 100)}%` : "—");
+
+function ChatView({ tool, ...shared }: { tool: ChatTool } & Shared) {
+  const [mode, setMode] = useState<"file" | "manual">("file");
+  const [msgs, setMsgs] = useState<ChatMsg[] | null>(null);
+  const [senders, setSenders] = useState<{ name: string; count: number }[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<ChatStats | null>(null);
+  const [paste, setPaste] = useState("");
+  const [manual, setManual] = useState<Record<string, number>>({});
+  const [manualResult, setManualResult] = useState<ChatStats["result"] | null>(null);
+  const start = useStartOnce(tool.id);
+
+  const load = (text: string) => {
+    const parsed = parseWhatsApp(text);
+    if (parsed.msgs.length < 2 || parsed.senders.length < 2) {
+      setError("We couldn’t find a two-person chat in that. Export the chat from WhatsApp (Without media) and choose the file it creates, or paste the text.");
+      return;
+    }
+    setError(null);
+    setMsgs(parsed.msgs);
+    setSenders(parsed.senders.slice(0, 2));
+  };
+  const reset = () => {
+    setMsgs(null);
+    setSenders([]);
+    setStats(null);
+    setPaste("");
+    setManualResult(null);
+    setManual({});
+  };
+
+  const result = stats ? tool.results.find((r) => r.id === stats.result) : manualResult ? tool.results.find((r) => r.id === manualResult) : null;
+  if (result) {
+    return (
+      <ResultCard toolId={tool.id} result={result} next={tool.next} method={tool.method} restartLabel="Check another chat" onRestart={reset} {...shared}>
+        {stats ? (
+          <dl className="mt-4 grid gap-2 sm:grid-cols-2">
+            {[
+              ["Conversations you started", pct(stats.starts.me, stats.starts.her)],
+              ["Your share of the words", pct(stats.words.me, stats.words.her)],
+              ["Questions asked", `you ${stats.questions.me} · her ${stats.questions.her}`],
+              ["Typical reply time", `you ${formatMins(stats.replyMins.me)} · her ${formatMins(stats.replyMins.her)}`],
+              ["Messages after 6+ hours of no reply", `you ${stats.followUps.me} · her ${stats.followUps.her}`],
+              ["Her messages a day, last 2 weeks vs the 2 before", `${stats.recent.herPerDay.toFixed(1)} vs ${stats.recent.herPerDayBefore.toFixed(1)}`],
+            ].map(([k, v]) => (
+              <div key={k} className="min-w-0 rounded-2xl bg-slab-2 px-4 py-3">
+                <dt className="text-[0.8rem] text-ink-4">{k}</dt>
+                <dd className="condensed mt-0.5 text-[1.3rem] font-semibold text-ink">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+        {stats ? <p className="mt-3 text-[0.82rem] text-ink-4">{stats.messages.me + stats.messages.her} messages over {stats.days} days. Counted in your browser and then forgotten.</p> : null}
+      </ResultCard>
+    );
+  }
+
+  if (msgs && senders.length === 2) {
+    return (
+      <div>
+        <p className="text-[1.08rem] font-semibold leading-snug text-ink">Which one is you?</p>
+        <p className="mt-1 text-[0.9rem] text-ink-4">{msgs.length} messages found.</p>
+        <div className="mt-4">
+          <OptionList
+            options={senders.map((s) => `${s.name} · ${s.count} messages`)}
+            onPick={(i) => {
+              const me = senders[i].name;
+              const her = senders[1 - i].name;
+              const s = analyzeChat(msgs, me, her);
+              setStats(s);
+              track("tool_complete", { tool: tool.id, result: s.result });
+            }}
+          />
+        </div>
+        <button type="button" className="btn btn-quiet btn-sm mt-4" onClick={reset}>
+          ← Use a different chat
+        </button>
+      </div>
+    );
+  }
+
+  const MANUAL: { id: string; q: string; options: [string, number][] }[] = [
+    { id: "started", q: "Of your last 10 conversations, how many did you start?", options: [["2 or fewer", 2], ["3–5", 4], ["6–7", 6], ["8 or more", 9]] },
+    { id: "reply", q: "When you text her, how long does she usually take to reply?", options: [["Minutes", 0], ["An hour or two", 1], ["Half a day", 2], ["A day or more", 3]] },
+    { id: "questions", q: "Who asks more questions?", options: [["She does", 0], ["About even", 1], ["I do, a bit more", 2], ["Almost always me", 3]] },
+    { id: "double", q: "How often do you text again before she’s replied?", options: [["Almost never", 0], ["Sometimes", 1], ["Often", 2]] },
+    { id: "trend", q: "Compared with two weeks ago, she texts…", options: [["More, or the same", 0], ["A little less", 1], ["Much less", 2]] },
+  ];
+
+  return (
+    <div>
+      <div className="mb-4 flex flex-wrap gap-2" role="tablist">
+        <button type="button" role="tab" aria-selected={mode === "file"} className="chip" data-selected={mode === "file" ? "true" : undefined} onClick={() => setMode("file")}>
+          Analyze a WhatsApp chat
+        </button>
+        <button type="button" role="tab" aria-selected={mode === "manual"} className="chip" data-selected={mode === "manual" ? "true" : undefined} onClick={() => setMode("manual")}>
+          iMessage or other apps: 5 questions
+        </button>
+      </div>
+      {mode === "file" ? (
+        <div>
+          <ol className="list-decimal space-y-1 pl-5 text-[0.92rem] text-ink-3">
+            <li>In WhatsApp, open the chat with her and tap her name (iPhone) or ⋮ → More (Android).</li>
+            <li>Choose Export chat → Without media, and save the file.</li>
+            <li>Choose that file here, or open it and paste the text below.</li>
+          </ol>
+          <label className="btn btn-primary mt-4 cursor-pointer">
+            Choose the export file
+            <input
+              type="file"
+              accept=".txt,.zip,text/plain,application/zip"
+              className="sr-only"
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                start();
+                try {
+                  const text = /\.zip$/i.test(f.name) ? await readZipText(await f.arrayBuffer()) : await f.text();
+                  if (!text) setError("That zip has no chat text we can read. Try exporting again, or paste the text instead.");
+                  else load(text);
+                } catch (err) {
+                  console.warn("[chat] read failed", err);
+                  setError("We couldn’t read that file. Paste the chat text instead.");
+                }
+              }}
+            />
+          </label>
+          <label className="mt-4 block">
+            <span className="text-[0.92rem] font-semibold text-ink">Or paste the exported text</span>
+            <textarea className="input mt-1.5 min-h-[110px] w-full resize-y" placeholder="12/31/25, 9:15 PM - Sam: haha that place is so good" value={paste} onChange={(e) => setPaste(e.target.value)} />
+          </label>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm mt-3"
+            disabled={paste.trim().length < 40}
+            onClick={() => {
+              start();
+              load(paste);
+            }}
+          >
+            Analyze the pasted chat
+          </button>
+          {error ? <p className="mt-3 text-[0.92rem] text-bad">{error}</p> : null}
+          <p className="mt-3 text-[0.8rem] text-ink-4">Runs entirely in your browser. Nothing is uploaded, saved or seen by us: close the page and it’s gone.</p>
+        </div>
+      ) : (
+        <div>
+          <p className="text-[0.92rem] text-ink-3">{tool.manual.intro}</p>
+          {MANUAL.map((m) => (
+            <fieldset key={m.id} className="mt-4">
+              <legend className="text-[0.95rem] font-semibold text-ink">{m.q}</legend>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {m.options.map(([label, value]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    className="chip"
+                    data-selected={manual[m.id] === value ? "true" : undefined}
+                    aria-pressed={manual[m.id] === value}
+                    onClick={() => {
+                      start();
+                      setManual({ ...manual, [m.id]: value });
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          ))}
+          <button
+            type="button"
+            className="btn btn-primary mt-5"
+            disabled={MANUAL.some((m) => manual[m.id] === undefined)}
+            onClick={() => {
+              const r = manualChat({ started: manual.started, reply: manual.reply, questions: manual.questions, double: manual.double, trend: manual.trend });
+              setManualResult(r);
+              track("tool_complete", { tool: tool.id, result: r, mode: "manual" });
+            }}
+          >
+            Show my result
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- ladder ---------- */
+
+type LadderSave = { start: number; setting: string; done: Record<string, number> };
+
+function readSave(key: string): LadderSave | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as LadderSave) : null;
+  } catch {
+    return null;
+  }
+}
+
+function LadderView({ tool, chapters, price }: { tool: LadderTool } & Shared) {
+  const key = `sg_ladder_${tool.id}`;
+  const [start, setStart] = useState<number | null>(null);
+  const [setting, setSetting] = useState<string>(tool.settings[0].value);
+  const [done, setDone] = useState<Record<string, number>>({});
+  const [made, setMade] = useState(false);
+  const begin = useStartOnce(tool.id);
+
+  useEffect(() => {
+    const s = readSave(key);
+    if (s) {
+      setStart(s.start);
+      setSetting(s.setting);
+      setDone(s.done ?? {});
+      setMade(true);
+    }
+  }, [key]);
+  const save = (next: LadderSave) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch (e) {
+      console.warn("[ladder] could not save progress", e);
+    }
+  };
+
+  const plan = made && start !== null ? buildPlan(tool, start, setting) : [];
+  const ch = chapters[tool.chapter];
+  const doneDays = Object.keys(done).length;
+  const nerves = plan.filter((p) => done[p.day] !== undefined).map((p) => done[p.day]);
+  const firstAvg = nerves.slice(0, 3).reduce((s, n) => s + n, 0) / Math.max(1, Math.min(3, nerves.length));
+  const lastAvg = nerves.slice(-3).reduce((s, n) => s + n, 0) / Math.max(1, Math.min(3, nerves.length));
+
+  if (!made || start === null) {
+    return (
+      <div>
+        <fieldset>
+          <legend className="text-[0.95rem] font-semibold text-ink">Where are you now? Pick the hardest one you can already do.</legend>
+          <div className="mt-2 grid gap-2">
+            {tool.levels.map((l) => (
+              <button key={l.n} type="button" className="chip w-full justify-start !rounded-2xl !px-4 !py-3 text-left" data-selected={start === l.n ? "true" : undefined} aria-pressed={start === l.n} onClick={() => { begin(); setStart(l.n); }}>
+                <span className="condensed mr-2 text-ink-4">{l.n}</span> {l.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        <fieldset className="mt-4">
+          <legend className="text-[0.95rem] font-semibold text-ink">Where do you see women most?</legend>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {tool.settings.map((s) => (
+              <button key={s.value} type="button" className="chip" data-selected={setting === s.value ? "true" : undefined} aria-pressed={setting === s.value} onClick={() => setSetting(s.value)}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        <button
+          type="button"
+          className="btn btn-primary mt-5"
+          disabled={start === null}
+          onClick={() => {
+            if (start === null) return;
+            setMade(true);
+            setDone({});
+            save({ start, setting, done: {} });
+            track("tool_complete", { tool: tool.id, result: `level-${start}`, setting });
+          }}
+        >
+          Build my {tool.days}-day plan
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <p className="text-[0.95rem] text-ink-2">
+        Your plan starts at step {start}: <span className="font-semibold text-ink">{tool.levels.find((l) => l.n === start)?.label}</span>. One task a day. Before each one, rate how nervous you are from 0 to 10; the number should fall as the days go by.
+      </p>
+      {doneDays ? (
+        <p className="condensed mt-3 text-[1.2rem] font-semibold text-ink">
+          {doneDays} of {plan.length} days done{nerves.length >= 4 ? ` · nerves ${firstAvg.toFixed(1)} → ${lastAvg.toFixed(1)}` : ""}
+        </p>
+      ) : null}
+      <ol className="mt-4 grid gap-2">
+        {plan.map((p) => {
+          const n = done[p.day];
+          return (
+            <li key={p.day} className="rounded-2xl bg-slab-2 px-4 py-3" data-done={n !== undefined ? "true" : undefined}>
+              <p className="text-[0.78rem] font-semibold uppercase tracking-[0.12em] text-ink-4">
+                Day {p.day} · step {p.level}
+              </p>
+              <p className={`mt-1 text-[0.99rem] leading-relaxed ${n !== undefined ? "text-ink-3 line-through decoration-ink-4/50" : "text-ink"}`}>{p.step.text}</p>
+              {p.step.why ? <p className="mt-1 text-[0.86rem] text-ink-4">{p.step.why}</p> : null}
+              <label className="mt-2 flex flex-wrap items-center gap-2 text-[0.88rem] text-ink-3">
+                {n !== undefined ? "Done. Nerves before:" : "Done it? Nerves before (0–10):"}
+                <select
+                  className="input !min-h-0 w-auto !py-1"
+                  value={n ?? ""}
+                  onChange={(e) => {
+                    const next = { ...done };
+                    if (e.target.value === "") delete next[p.day];
+                    else next[p.day] = Number(e.target.value);
+                    setDone(next);
+                    save({ start: start!, setting, done: next });
+                    if (e.target.value !== "") track("tool_progress", { tool: tool.id, day: p.day });
+                  }}
+                >
+                  <option value="">–</option>
+                  {Array.from({ length: 11 }, (_, i) => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="mt-4 text-[0.9rem] leading-relaxed text-ink-3">{tool.note}</p>
+      <p className="mt-2 text-[0.8rem] text-ink-4">Your plan and progress are saved in this browser only.</p>
+      <button
+        type="button"
+        className="btn btn-quiet btn-sm mt-3"
+        onClick={() => {
+          setMade(false);
+          setDone({});
+          try {
+            localStorage.removeItem(key);
+          } catch (e) {
+            console.warn("[ladder] could not clear progress", e);
+          }
+        }}
+      >
+        Start a new plan
+      </button>
+      {tool.next ? <NextStep toolId={tool.id} next={tool.next} /> : null}
+      {ch ? <ChapterCard toolId={tool.id} chapter={ch} price={price} /> : null}
     </div>
   );
 }

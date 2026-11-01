@@ -30,6 +30,7 @@ export function toolById(id: string | null): Tool | null {
 
 /** Chapter ids a tool's results point to, so the page can send just those titles. */
 export function toolChapters(tool: Tool): string[] {
-  if (tool.kind === "generator") return [tool.chapter];
+  if (tool.kind === "generator" || tool.kind === "ladder") return [tool.chapter];
+  if (tool.kind === "decoder") return [...new Set(tool.phrases.flatMap((p) => Object.values(p.readings).map((r) => r!.chapter)))];
   return [...new Set(tool.results.map((r) => r.chapter))];
 }

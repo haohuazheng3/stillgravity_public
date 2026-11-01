@@ -12,6 +12,9 @@ import { toolById, toolChapters } from "@/content/tools";
 import { chapterTeaser } from "@/content/book-teasers";
 import { ToolRunner, type ChapterInfo } from "@/components/tools/ToolRunner";
 import { CATALOG_ID, ToolCatalog } from "@/components/tools/ToolCatalog";
+import { DECODER_ID, DecoderCatalog, LADDER_ID, LadderCatalog } from "@/components/tools/Catalogs";
+import { TrendLog } from "@/components/tools/TrendLog";
+import { RedditThreads } from "@/components/blog/RedditThreads";
 import { autolinkTerms, postUrl, relatedPosts, type Post } from "@/lib/blog";
 import { renderMdx } from "@/lib/mdx";
 import { articleLd, faqLd, webAppLd } from "@/lib/seo";
@@ -115,7 +118,7 @@ function VerdictCard({ answer, points }: { answer: string; points: string[] }) {
   );
 }
 
-const COMPONENTS = { SayThis, Truth, FieldDrill, Mistake, Science, Chat, Compare, Table, Points, BookCTA, Callout, Photo } as unknown as Record<
+const COMPONENTS = { SayThis, Truth, FieldDrill, Mistake, Science, Chat, Compare, Table, Points, BookCTA, Callout, Photo, TrendLog, RedditThreads } as unknown as Record<
   string,
   ComponentType<Record<string, unknown>>
 >;
@@ -128,7 +131,15 @@ export async function ArticleView({ post, preview = false }: { post: Post; previ
   const chapter = post.chapters[0];
   const tool = toolById(post.tool);
   const catalog = tool?.kind === "generator" && tool.catalog ? tool : null;
-  const toc = catalog ? [{ id: CATALOG_ID, text: catalog.catalog!.title }, ...post.headings] : post.headings;
+  const decoder = tool?.kind === "decoder" ? tool : null;
+  const ladder = tool?.kind === "ladder" ? tool : null;
+  const toc = catalog
+    ? [{ id: CATALOG_ID, text: catalog.catalog!.title }, ...post.headings]
+    : decoder
+      ? [{ id: DECODER_ID, text: decoder.catalog.title }, ...post.headings]
+      : ladder
+        ? [{ id: LADDER_ID, text: ladder.catalog.title }, ...post.headings]
+        : post.headings;
   const chapterMap: Record<string, ChapterInfo> = {};
   if (tool) {
     for (const id of toolChapters(tool)) {
@@ -246,6 +257,8 @@ export async function ArticleView({ post, preview = false }: { post: Post; previ
             ) : null}
 
             {catalog ? <ToolCatalog tool={catalog} /> : null}
+            {decoder ? <DecoderCatalog tool={decoder} /> : null}
+            {ladder ? <LadderCatalog tool={ladder} /> : null}
 
             <div className="slab mt-8 px-5 py-8 sm:px-10 sm:py-12">
               <div className="prose-sg">{body}</div>

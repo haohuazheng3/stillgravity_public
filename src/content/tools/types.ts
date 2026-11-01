@@ -111,7 +111,7 @@ export interface CalcInput {
 }
 
 /** Calculators are fixed formulas implemented in the renderer; the data only names one. */
-export type Formula = "ageRule" | "datesToRelationship" | "breakupRecovery" | "engagementTiming" | "ringBudget";
+export type Formula = "ageRule" | "datesToRelationship" | "breakupRecovery" | "engagementTiming" | "ringBudget" | "talkingStage";
 
 export interface CalculatorTool {
   kind: "calculator";
@@ -193,4 +193,131 @@ export interface CheckerTool {
   next?: ToolNext;
 }
 
-export type Tool = QuizTool | DecisionTool | CalculatorTool | GeneratorTool | CheckerTool;
+/* ---------- decoder: "what does it mean when she says…" ---------- */
+
+/** One reading of a phrase: the same fields as a result, without id/tone (the engine adds them). */
+export type Reading = Omit<ToolResult, "id" | "tone" | "next">;
+
+export type ReadingKey = "warm" | "unsure" | "no";
+
+export interface DecoderPhrase {
+  id: string;
+  /** What she said, as she'd type it: "I'm busy this week". */
+  say: string;
+  /** Catalog group id. */
+  group: string;
+  /** One or two sentences: what it usually means, before any context. */
+  usually: string;
+  /** The phrase means one thing whatever the context (e.g. "I have a boyfriend"). */
+  fixed?: ReadingKey;
+  readings: Partial<Record<ReadingKey, Reading>>;
+  /** A guide that covers this phrase in depth. */
+  href?: string;
+}
+
+export interface DecoderQuestion {
+  id: string;
+  q: string;
+  help?: string;
+  options: { label: string; points: number }[];
+}
+
+export interface DecoderTool {
+  kind: "decoder";
+  id: string;
+  name: string;
+  intro: string;
+  groups: { id: string; heading: string; label?: string; intro?: string }[];
+  phrases: DecoderPhrase[];
+  /** Asked after the phrase; points add up to the reading. */
+  questions: DecoderQuestion[];
+  /** score ≥ warm → warm; score ≤ no → no; otherwise unsure. */
+  cut: { warm: number; no: number };
+  method: string;
+  next?: ToolNext;
+  /** Server-rendered list of every phrase, grouped. */
+  catalog: { title: string; intro?: string };
+}
+
+/* ---------- sendcheck: "should I send this text?" ---------- */
+
+export interface SendRule {
+  id: string;
+  /** stop: don't send it now; edit: fix before sending; good: a strength worth keeping. */
+  kind: "stop" | "edit" | "good";
+  label: string;
+  fix: string;
+  /** Every condition given must hold for the rule to fire. */
+  test: {
+    /** Regex source tested against the draft (case-insensitive). */
+    pattern?: string;
+    minMatches?: number;
+    /** Fires when this pattern is absent from the draft. */
+    absent?: string;
+    minChars?: number;
+    maxChars?: number;
+    /** Draft is more than this many times longer than her last message (needs her message). */
+    longerThanHers?: number;
+    /** A context answer in range (inclusive). */
+    context?: { id: string; min?: number; max?: number }[];
+  };
+}
+
+export interface SendCheckTool {
+  kind: "sendcheck";
+  id: string;
+  name: string;
+  intro: string;
+  input: { label: string; placeholder: string; maxLength: number };
+  her: { label: string; placeholder: string; maxLength: number };
+  context: { id: string; label: string; options: { label: string; value: number }[] }[];
+  rules: SendRule[];
+  /** Result ids: "wait" (a stop rule fired), "send" (no edits), "edit" (1–2 edits), "rewrite" (3+). */
+  results: ToolResult[];
+  method: string;
+  next?: ToolNext;
+}
+
+/* ---------- chat: who is carrying the conversation ---------- */
+
+export interface ChatTool {
+  kind: "chat";
+  id: string;
+  name: string;
+  intro: string;
+  /** Result ids: balanced, leaning, you-carry, she-carries, cooling, thin. */
+  results: ToolResult[];
+  /** The no-export version: five questions scored to the same results. */
+  manual: { intro: string };
+  method: string;
+  next?: ToolNext;
+}
+
+/* ---------- ladder: a day-by-day exposure plan ---------- */
+
+export interface LadderStep {
+  text: string;
+  level: number;
+  /** Setting values this step fits; none = any setting. */
+  tags: string[];
+  why?: string;
+}
+
+export interface LadderTool {
+  kind: "ladder";
+  id: string;
+  name: string;
+  intro: string;
+  levels: { n: number; label: string; heading: string; intro?: string }[];
+  settings: { value: string; label: string }[];
+  steps: LadderStep[];
+  /** Days in the plan, and how many days each level gets before moving up. */
+  days: number;
+  perLevel: number;
+  chapter: string;
+  note: string;
+  catalog: { title: string; intro?: string };
+  next?: ToolNext;
+}
+
+export type Tool = QuizTool | DecisionTool | CalculatorTool | GeneratorTool | CheckerTool | DecoderTool | SendCheckTool | ChatTool | LadderTool;
