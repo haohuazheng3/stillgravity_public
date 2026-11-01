@@ -1,6 +1,7 @@
 /**
  * The free tools people find most (GSC, 2026-10-11 round), linked from the home page and the
- * guides index with the words people search for. Order = priority.
+ * guides index with the words people search for. Order = priority. Round 5 (2026-11-01) adds
+ * the situation pages and new tools near the top so crawlers reach them from the home page.
  */
 export const POPULAR_TOOLS: { path: string; label: string }[] = [
   { path: "/blog/approaching/how-to-get-a-girlfriend", label: "How to get a girlfriend" },
@@ -15,6 +16,18 @@ export const POPULAR_TOOLS: { path: string; label: string }[] = [
   { path: "/blog/rejection/how-to-get-over-a-girl", label: "How to get over a girl" },
   { path: "/blog/signals/is-she-losing-interest", label: "Is she losing interest?" },
   { path: "/blog/texting/she-stopped-texting-me", label: "She stopped texting me" },
+  { path: "/blog/signals/what-does-it-mean-when-a-girl-says", label: "What does it mean when a girl says…" },
+  { path: "/blog/texting/should-i-send-this-text", label: "Should I send this text?" },
+  { path: "/blog/texting/one-sided-texting", label: "One-sided texting test" },
+  { path: "/blog/talking-stage/how-long-should-the-talking-stage-last", label: "How long should the talking stage last?" },
+  { path: "/blog/self-improvement/how-to-be-more-confident-around-women", label: "How to be more confident around women" },
+  { path: "/blog/texting/she-takes-hours-to-reply-but-seems-interested", label: "She takes hours to reply" },
+  { path: "/blog/texting/she-left-me-on-read", label: "She left me on read" },
+  { path: "/blog/signals/mixed-signals-from-a-girl", label: "Mixed signals from a girl" },
+  { path: "/blog/talking-stage/she-said-shes-busy", label: "She said she’s busy" },
+  { path: "/blog/talking-stage/she-said-shes-not-ready-for-a-relationship", label: "She’s not ready for a relationship" },
+  { path: "/blog/signals/does-she-like-me-or-is-she-just-being-nice", label: "Does she like me or is she just being nice?" },
+  { path: "/blog/texting/first-text-after-getting-her-number", label: "First text after getting her number" },
   { path: "/blog/attraction/dating-advice-for-men", label: "Dating advice for men" },
   { path: "/blog/self-improvement/dating-coach-for-men", label: "Dating coach for men" },
   { path: "/blog/self-improvement/best-dating-books-for-men", label: "Best dating books for men" },

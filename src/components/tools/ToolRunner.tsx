@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { track } from "@/components/Consent";
 import type {
   CalculatorTool,
@@ -22,6 +22,7 @@ import type {
 import { FORMULAS } from "./formulas";
 import { analyzeChat, formatMins, manualChat, parseWhatsApp, readZipText, type ChatMsg, type ChatStats } from "./chat";
 import { buildPlan, checkSend, decodePhrase } from "./logic";
+import { parseJson, useLocal, writeLocal } from "./local";
 
 export type ChapterInfo = { id: string; title: string; page: number; teaser?: string };
 
@@ -991,38 +992,26 @@ function ChatView({ tool, ...shared }: { tool: ChatTool } & Shared) {
 
 type LadderSave = { start: number; setting: string; done: Record<string, number> };
 
-function readSave(key: string): LadderSave | null {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as LadderSave) : null;
-  } catch {
-    return null;
-  }
-}
-
 function LadderView({ tool, chapters, price }: { tool: LadderTool } & Shared) {
   const key = `sg_ladder_${tool.id}`;
-  const [start, setStart] = useState<number | null>(null);
-  const [setting, setSetting] = useState<string>(tool.settings[0].value);
-  const [done, setDone] = useState<Record<string, number>>({});
-  const [made, setMade] = useState(false);
+  const raw = useLocal(key);
+  const stored = useMemo(() => parseJson<LadderSave>(raw), [raw]);
+  // If the browser refuses storage, the plan lives in memory for this visit.
+  const [memory, setMemory] = useState<LadderSave | null>(null);
+  const [cleared, setCleared] = useState(false);
+  const saved = cleared ? null : (memory ?? stored);
+  const [pickStart, setPickStart] = useState<number | null>(null);
+  const [pickSetting, setPickSetting] = useState<string>(tool.settings[0].value);
   const begin = useStartOnce(tool.id);
+  const made = saved !== null;
+  const start = saved?.start ?? pickStart;
+  const setting = saved?.setting ?? pickSetting;
+  const done = saved?.done ?? {};
 
-  useEffect(() => {
-    const s = readSave(key);
-    if (s) {
-      setStart(s.start);
-      setSetting(s.setting);
-      setDone(s.done ?? {});
-      setMade(true);
-    }
-  }, [key]);
-  const save = (next: LadderSave) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(next));
-    } catch (e) {
-      console.warn("[ladder] could not save progress", e);
-    }
+  const save = (next: LadderSave | null) => {
+    setCleared(next === null);
+    if (!writeLocal(key, next ? JSON.stringify(next) : null)) setMemory(next);
+    else if (memory) setMemory(next);
   };
 
   const plan = made && start !== null ? buildPlan(tool, start, setting) : [];
@@ -1039,7 +1028,7 @@ function LadderView({ tool, chapters, price }: { tool: LadderTool } & Shared) {
           <legend className="text-[0.95rem] font-semibold text-ink">Where does it get hard? Pick the first step that makes you nervous.</legend>
           <div className="mt-2 grid gap-2">
             {tool.levels.map((l) => (
-              <button key={l.n} type="button" className="chip w-full justify-start !rounded-2xl !px-4 !py-3 text-left" data-selected={start === l.n ? "true" : undefined} aria-pressed={start === l.n} onClick={() => { begin(); setStart(l.n); }}>
+              <button key={l.n} type="button" className="chip w-full justify-start !rounded-2xl !px-4 !py-3 text-left" data-selected={start === l.n ? "true" : undefined} aria-pressed={start === l.n} onClick={() => { begin(); setPickStart(l.n); }}>
                 <span className="condensed mr-2 text-ink-4">{l.n}</span> {l.label}
               </button>
             ))}
@@ -1049,7 +1038,7 @@ function LadderView({ tool, chapters, price }: { tool: LadderTool } & Shared) {
           <legend className="text-[0.95rem] font-semibold text-ink">Where do you see women most?</legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {tool.settings.map((s) => (
-              <button key={s.value} type="button" className="chip" data-selected={setting === s.value ? "true" : undefined} aria-pressed={setting === s.value} onClick={() => setSetting(s.value)}>
+              <button key={s.value} type="button" className="chip" data-selected={setting === s.value ? "true" : undefined} aria-pressed={setting === s.value} onClick={() => setPickSetting(s.value)}>
                 {s.label}
               </button>
             ))}
@@ -1061,8 +1050,6 @@ function LadderView({ tool, chapters, price }: { tool: LadderTool } & Shared) {
           disabled={start === null}
           onClick={() => {
             if (start === null) return;
-            setMade(true);
-            setDone({});
             save({ start, setting, done: {} });
             track("tool_complete", { tool: tool.id, result: `level-${start}`, setting });
           }}
@@ -1102,7 +1089,6 @@ function LadderView({ tool, chapters, price }: { tool: LadderTool } & Shared) {
                     const next = { ...done };
                     if (e.target.value === "") delete next[p.day];
                     else next[p.day] = Number(e.target.value);
-                    setDone(next);
                     save({ start: start!, setting, done: next });
                     if (e.target.value !== "") track("tool_progress", { tool: tool.id, day: p.day });
                   }}
@@ -1125,13 +1111,8 @@ function LadderView({ tool, chapters, price }: { tool: LadderTool } & Shared) {
         type="button"
         className="btn btn-quiet btn-sm mt-3"
         onClick={() => {
-          setMade(false);
-          setDone({});
-          try {
-            localStorage.removeItem(key);
-          } catch (e) {
-            console.warn("[ladder] could not clear progress", e);
-          }
+          save(null);
+          setPickStart(null);
         }}
       >
         Start a new plan

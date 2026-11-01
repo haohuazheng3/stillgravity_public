@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { track } from "@/components/Consent";
 import { trendVerdict, type TrendDay } from "./logic";
+import { parseJson, useLocal, writeLocal } from "./local";
 
 /*
  * A two-week log that replaces checking her messages all day with three taps at night.
@@ -32,31 +33,19 @@ const CHOICES: { id: keyof TrendDay; q: string; options: [string, TrendDay[keyof
 ];
 
 export function TrendLog() {
-  const [saved, setSaved] = useState<Saved>({ days: {} });
-  const [draft, setDraft] = useState<Partial<TrendDay>>({});
-  const [storage, setStorage] = useState(true);
+  const raw = useLocal(KEY);
+  const stored = useMemo(() => parseJson<Saved>(raw) ?? { days: {} }, [raw]);
+  // If the browser refuses storage, the log lives in memory for this visit.
+  const [memory, setMemory] = useState<Saved | null>(null);
+  const saved = memory ?? stored;
+  const [edit, setEdit] = useState<Partial<TrendDay> | null>(null);
   const day = today();
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) {
-        const s = JSON.parse(raw) as Saved;
-        setSaved(s);
-        if (s.days[day]) setDraft(s.days[day]);
-      }
-    } catch {
-      setStorage(false);
-    }
-  }, [day]);
+  const draft: Partial<TrendDay> = edit ?? saved.days[day] ?? {};
+  const storage = memory === null;
 
   const write = (next: Saved) => {
-    setSaved(next);
-    try {
-      localStorage.setItem(KEY, JSON.stringify(next));
-    } catch {
-      setStorage(false);
-    }
+    if (!writeLocal(KEY, JSON.stringify(next))) setMemory(next);
+    else if (memory) setMemory(next);
   };
 
   const entries = Object.entries(saved.days)
@@ -85,7 +74,7 @@ export function TrendLog() {
                   className="chip"
                   data-selected={draft[c.id] === value ? "true" : undefined}
                   aria-pressed={draft[c.id] === value}
-                  onClick={() => setDraft({ ...draft, [c.id]: value })}
+                  onClick={() => setEdit({ ...draft, [c.id]: value })}
                 >
                   {label}
                 </button>
@@ -102,6 +91,7 @@ export function TrendLog() {
           if (!complete) return;
           const next = { days: { ...saved.days, [day]: draft as TrendDay } };
           write(next);
+          setEdit(null);
           track("tool_progress", { tool: "trend-log", days: Object.keys(next.days).length });
         }}
       >
