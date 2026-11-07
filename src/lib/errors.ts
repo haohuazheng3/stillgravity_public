@@ -60,7 +60,14 @@ export function fingerprintOf(name: string, frame: string, route: string | null 
   return createHash("sha1").update(`${name}|${anchor}|${route ?? ""}`).digest("hex");
 }
 
-const NOTIFY_EVERY_MS = 6 * 60 * 60 * 1000;
+/**
+ * Immediate email only the first time a group is severe. A group that keeps recurring, or is
+ * reopened after being resolved, is never emailed again: open groups reach the owner through
+ * the daily digest (`src/lib/error-digest.ts`) instead.
+ */
+export function shouldNotifyNow(row: { severity: string; notifiedAt: Date | string | null }): boolean {
+  return row.severity === "error" && !row.notifiedAt;
+}
 
 /**
  * React hydration mismatches reported by browsers (#418/#423/#425, "Hydration failed").
@@ -126,15 +133,16 @@ export async function captureError(err: unknown, opts: CaptureOptions = {}): Pro
       });
 
     const row = rows[0];
-    const shouldNotify =
-      row &&
-      row.severity === "error" &&
-      (!row.notifiedAt || Date.now() - new Date(row.notifiedAt).getTime() > NOTIFY_EVERY_MS);
-    if (shouldNotify) {
-      await db
-        .update(errorGroups)
-        .set({ notifiedAt: sql`now()` })
-        .where(sql`${errorGroups.id} = ${row.id}`);
+    // Claim the one-time email atomically so concurrent first occurrences can't both send it.
+    const claimed =
+      row && shouldNotifyNow(row)
+        ? await db
+            .update(errorGroups)
+            .set({ notifiedAt: sql`now()` })
+            .where(sql`${errorGroups.id} = ${row.id} AND ${errorGroups.notifiedAt} IS NULL`)
+            .returning({ id: errorGroups.id })
+        : [];
+    if (row && claimed.length) {
       const text = [
         `${n.name}: ${n.message}`,
         "",
@@ -144,6 +152,8 @@ export async function captureError(err: unknown, opts: CaptureOptions = {}): Pro
         n.stack.split("\n").slice(0, 12).join("\n"),
         "",
         `Inbox: ${SITE.url}/admin/errors`,
+        "",
+        "This is the only email for this error group; while it stays unresolved it appears in the daily digest.",
       ].join("\n");
       const p = notifyOwner({ subject: `Error: ${n.name} on ${route ?? source}`, text });
       try {

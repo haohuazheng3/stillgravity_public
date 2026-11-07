@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { effectiveSeverity, fingerprintOf, firstFrame } from "@/lib/errors";
+import { effectiveSeverity, fingerprintOf, firstFrame, shouldNotifyNow } from "@/lib/errors";
 
 describe("error fingerprinting", () => {
   it("strips line/column numbers and build hashes so deploys don't split groups", () => {
@@ -29,5 +29,14 @@ describe("severity classification", () => {
     expect(effectiveSeverity("client", "error", "TypeError: x is undefined")).toBe("error");
     expect(effectiveSeverity("server", "error", hydration)).toBe("error");
     expect(effectiveSeverity("client", "warn", "anything")).toBe("warn");
+  });
+});
+
+describe("owner notification", () => {
+  it("emails once, the first time a group is severe, and never re-notifies", () => {
+    expect(shouldNotifyNow({ severity: "error", notifiedAt: null })).toBe(true);
+    expect(shouldNotifyNow({ severity: "error", notifiedAt: new Date(Date.now() - 7 * 24 * 3600 * 1000) })).toBe(false);
+    expect(shouldNotifyNow({ severity: "error", notifiedAt: "2026-10-01T00:00:00Z" })).toBe(false);
+    expect(shouldNotifyNow({ severity: "warn", notifiedAt: null })).toBe(false);
   });
 });
