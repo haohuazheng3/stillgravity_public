@@ -6,12 +6,18 @@
  *             receiving server's SPF / DKIM / DMARC verdicts. Never rejects: a broken app must
  *             not bounce mail back to a sender.
  * fetch()     POST /notify (Bearer NOTIFY_TOKEN) emails the owner through the send_email
- *             binding. GET /health answers 200.
- * scheduled() Every 30 minutes: probe https://stillgravity.com/api/health. On failure, email the
- *             owner (at most every 3 hours while it stays down); email again when it recovers.
+ *             binding. POST /probe (same token; `?dry=1` sends and stores nothing) runs the
+ *             health probe now. GET /health answers 200.
+ * scheduled() Every 30 minutes: probe https://stillgravity.com/api/health (200 = the site can
+ *             serve; open errors in the inbox don't count). Emails only on state changes
+ *             (rules in alerting.ts): DOWN after 2 failed probes in a row, one reminder a day
+ *             while it stays down, one RECOVERED when it passes again. State lives in the
+ *             STATE KV namespace (the Cache API is per data center, so cron runs landing in
+ *             different places lost it and re-alerted).
  */
 import PostalMime from "postal-mime";
 import { EmailMessage } from "cloudflare:email";
+import { duration, nextAlert, parseState, type AlertAction, type AlertState } from "./alerting";
 
 export interface Env {
   APP_URL: string;
@@ -19,6 +25,8 @@ export interface Env {
   INBOX_INGEST_SECRET: string;
   NOTIFY_TOKEN: string;
   OWNER_MAIL: { send(message: EmailMessage): Promise<void> };
+  /** Probe alert state. Provisioned by `wrangler deploy` from wrangler.toml; Cache API fallback if unbound. */
+  STATE?: KVNamespace;
 }
 
 interface IncomingEmail {
@@ -32,7 +40,7 @@ interface IncomingEmail {
 const FROM_ADDRESS = "alerts@stillgravity.com";
 const FROM_DISPLAY = "Still Gravity Alerts";
 const MAX_BODY_CHARS = 200_000;
-const ALERT_EVERY_MS = 3 * 60 * 60 * 1000;
+const STATE_KEY = "health-probe";
 const STATE_URL = "https://stillgravity-mail.internal/health-state";
 
 function json(body: unknown, status = 200): Response {
@@ -139,49 +147,77 @@ async function ingest(message: IncomingEmail, env: Env): Promise<void> {
 
 /* ---------- health probe ---------- */
 
-interface ProbeState {
-  failing: boolean;
-  lastAlertAt: number;
-  since: number;
-}
-
-async function readState(): Promise<ProbeState> {
-  const hit = await caches.default.match(STATE_URL);
-  if (!hit) return { failing: false, lastAlertAt: 0, since: 0 };
+/** null = the store could not be read; the run is skipped rather than risk a duplicate alert. */
+async function readState(env: Env): Promise<AlertState | null> {
   try {
-    return (await hit.json()) as ProbeState;
-  } catch {
-    return { failing: false, lastAlertAt: 0, since: 0 };
+    if (env.STATE) return parseState(await env.STATE.get(STATE_KEY, "json"));
+    const hit = await caches.default.match(STATE_URL);
+    return parseState(hit ? await hit.json() : null);
+  } catch (e) {
+    console.error("[stillgravity-mail] probe state unreadable", e instanceof Error ? e.message : String(e));
+    return null;
   }
 }
 
-async function writeState(s: ProbeState): Promise<void> {
-  await caches.default.put(STATE_URL, new Response(JSON.stringify(s), { headers: { "cache-control": "max-age=604800" } }));
+async function writeState(env: Env, s: AlertState): Promise<void> {
+  if (env.STATE) await env.STATE.put(STATE_KEY, JSON.stringify(s));
+  else await caches.default.put(STATE_URL, new Response(JSON.stringify(s), { headers: { "cache-control": "max-age=604800" } }));
 }
 
-async function probe(env: Env): Promise<void> {
-  const url = `${env.APP_URL.replace(/\/$/, "")}/api/health?probe=${Date.now()}`;
+function alertMail(action: AlertAction, prev: AlertState, next: AlertState, now: number, site: string, url: string, detail: string): { subject: string; text: string } | null {
+  const inbox = `https://${site}/admin/errors`;
+  const rules = "You get one reminder a day while it stays down and one email when it recovers.";
+  if (action === "down") {
+    return {
+      subject: `ALERT: ${site} health check failing`,
+      text: `The health check at ${url} failed ${next.failures} probes in a row (first failure ${new Date(next.firstFailureAt).toISOString()}).\n\n${detail}\n\n${rules}\n\nError inbox: ${inbox}`,
+    };
+  }
+  if (action === "reminder") {
+    return {
+      subject: `STILL DOWN: ${site} health check failing for ${duration(now - next.firstFailureAt)}`,
+      text: `The health check at ${url} has been failing since ${new Date(next.firstFailureAt).toISOString()} (${next.failures} probes in a row).\n\n${detail}\n\n${rules}\n\nError inbox: ${inbox}`,
+    };
+  }
+  if (action === "recovered") {
+    return {
+      subject: `Recovered: ${site} health check passing`,
+      text: `${prev.firstFailureAt ? `Health is green again after ${duration(now - prev.firstFailureAt)} (first failed probe ${new Date(prev.firstFailureAt).toISOString()}).` : "Health is green again."}\n\n${detail}`,
+    };
+  }
+  return null;
+}
+
+async function probe(env: Env, dry = false): Promise<{ ok: boolean; action: AlertAction; sent: boolean; state: AlertState } | null> {
+  const base = env.APP_URL.replace(/\/$/, "");
+  const url = `${base}/api/health`;
   let ok = false;
   let detail = "";
   try {
-    const res = await fetch(url, { headers: { "user-agent": "stillgravity-health-probe/1.0" }, signal: AbortSignal.timeout(20000) });
+    const res = await fetch(`${url}?probe=${Date.now()}`, { headers: { "user-agent": "stillgravity-health-probe/1.0" }, signal: AbortSignal.timeout(20000) });
     const body = await res.text();
     ok = res.status === 200;
     detail = `HTTP ${res.status}\n${body.slice(0, 1500)}`;
   } catch (e) {
     detail = `request failed: ${e instanceof Error ? e.message : String(e)}`;
   }
-  const state = await readState();
+  const prev = await readState(env);
+  if (!prev) return null;
   const now = Date.now();
-  if (!ok) {
-    if (!state.failing || now - state.lastAlertAt > ALERT_EVERY_MS) {
-      await sendToOwner(env, "ALERT: stillgravity.com health check failing", `The health check at ${url.split("?")[0]} is failing.\n\n${detail}\n\nError inbox: https://stillgravity.com/admin/errors`);
-      await writeState({ failing: true, lastAlertAt: now, since: state.failing ? state.since : now });
+  const { state, action } = nextAlert(prev, ok, now);
+  if (dry) return { ok, action, sent: false, state };
+  const mail = alertMail(action, prev, state, now, new URL(base).host, url, detail);
+  if (mail) {
+    try {
+      await sendToOwner(env, mail.subject, mail.text);
+    } catch (e) {
+      // Keep the old state so the next probe tries this email again.
+      console.error("[stillgravity-mail] alert email failed", action, e instanceof Error ? e.message : String(e));
+      return { ok, action, sent: false, state: prev };
     }
-  } else if (state.failing) {
-    await sendToOwner(env, "Recovered: stillgravity.com health check passing", `Health is green again after ${Math.round((now - state.since) / 60000)} minutes.\n\n${detail}`);
-    await writeState({ failing: false, lastAlertAt: 0, since: 0 });
   }
+  if (JSON.stringify(state) !== JSON.stringify(prev)) await writeState(env, state);
+  return { ok, action, sent: Boolean(mail), state };
 }
 
 export default {
@@ -221,8 +257,8 @@ export default {
     }
     if (url.pathname === "/probe" && req.method === "POST") {
       if (!bearerMatches(req, env.NOTIFY_TOKEN)) return json({ error: "unauthorized" }, 401);
-      await probe(env);
-      return json({ ok: true, state: await readState() });
+      const result = await probe(env, url.searchParams.get("dry") === "1");
+      return result ? json({ ...result, healthy: result.ok, ok: true, store: env.STATE ? "kv" : "cache" }) : json({ error: "state store unreadable" }, 503);
     }
     return json({ error: "not found" }, 404);
   },

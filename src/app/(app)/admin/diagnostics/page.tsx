@@ -15,8 +15,9 @@ export default async function DiagnosticsPage() {
     <div className="slab p-6 sm:p-8">
       <h1 className="headline text-[1.6rem] text-ink">Diagnostics</h1>
       <p className="mt-2 max-w-2xl text-[0.95rem] text-ink-3">
-        Fire a deliberate error to prove the pipeline end to end: it should appear in the error inbox, turn /api/health red, and
-        send an alert email. Resolve it in the inbox afterwards to turn health green again.
+        Fire a deliberate error to prove the pipeline end to end: it should appear in the error inbox and send an alert email,
+        and it shows in the daily error digest until you resolve it. Open errors don’t turn /api/health red (that only tracks
+        whether the site can serve).
       </p>
       <DiagnosticsButtons serverAction={throwServerError} />
     </div>

@@ -9,8 +9,11 @@ export const dynamic = "force-dynamic";
 
 /**
  * Self-diagnosis, safe to expose: names only, never values.
- * Non-200 when the database is unreachable, a required variable is missing, or the
- * error inbox holds unresolved errors of severity "error".
+ * 200 when the site can serve: the database answers and every required variable is set.
+ * Anything else is 503 (this is what the mail worker's probe alerts on).
+ * `errors.unresolvedSevere` is informational only: open items in the error inbox never turn
+ * this red. They reach the owner as their own alert email (`captureError`) and in the daily
+ * digest (`/api/cron/digest`).
  */
 export async function GET() {
   const started = Date.now();
@@ -32,7 +35,7 @@ export async function GET() {
   }
 
   const missing = missingEnv();
-  const ok = dbOk && missing.length === 0 && unresolved === 0;
+  const ok = dbOk && missing.length === 0;
   const body = {
     ok,
     env: VERCEL_ENV,
